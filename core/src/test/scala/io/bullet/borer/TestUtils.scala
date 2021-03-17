@@ -8,6 +8,8 @@
 
 package io.bullet.borer
 
+import scala.deriving.Mirror
+
 trait TestUtils:
 
   final def toHexString(bytes: Array[Byte]): String = bytes.map(x => f"${x & 0xFF}%02x").mkString
@@ -26,3 +28,6 @@ trait TestUtils:
       case '\r'          => "\\r"
       case c             => f"\\u${c.toInt}%04x"
     }
+
+  def unapplyOption[T <: Product](f: T => T)(using m: Mirror.ProductOf[T]): T => Option[m.MirroredElemTypes] =
+    x => Some(Tuple.fromProduct(x).asInstanceOf[m.MirroredElemTypes])

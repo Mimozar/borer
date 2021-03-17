@@ -10,7 +10,6 @@ package io.bullet.borer
 
 import utest._
 import io.bullet.borer.internal.Util._
-import io.bullet.borer.internal.unapplyOption
 
 object MiscCborSpec extends ByteArrayCborSpec:
 

@@ -8,7 +8,6 @@
 
 package io.bullet.borer
 
-import io.bullet.borer.internal.unapplyOption
 import utest._
 
 object NullOptionsSpec extends ByteArrayJsonSpec:

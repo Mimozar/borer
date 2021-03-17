@@ -10,7 +10,6 @@ package io.bullet.borer
 
 import java.math.BigInteger
 import io.bullet.borer.internal.Util._
-import io.bullet.borer.internal.unapplyOption
 import utest._
 
 import scala.collection.immutable.ListMap

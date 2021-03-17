@@ -8,8 +8,6 @@
 
 package io.bullet.borer
 
-import io.bullet.borer.internal.unapplyOption
-
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -17,15 +15,14 @@ import utest._
 
 import scala.io.Source
 
-object FileSpec extends TestSuite:
+object FileSpec extends TestSuite with TestUtils:
 
   final case class Foo(
       string: String = "This is a really long text for testing writing to a file",
       int: Int = 42,
       double: Double = 0.0)
 
-  implicit val fooCodec: Codec[Foo] =
-    Codec(Encoder.from(unapplyOption(Foo.unapply(_))), Decoder.from(Foo.apply(_, _, _)))
+  given Codec[Foo] = Codec(Encoder.from(unapplyOption(Foo.unapply(_))), Decoder.from(Foo.apply(_, _, _)))
 
   val tests = Tests {
 
