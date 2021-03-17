@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Mathias Doenitz
+ * Copyright (c) 2019-2021 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,9 @@
 package io.bullet.borer
 
 abstract class TupleEncoders {
+
+  implicit def forTuple0: Encoder[EmptyTuple] =
+    Encoder((w, _) => w.writeEmptyArray())
 
   implicit def forTuple1[T1 :Encoder]: Encoder[Tuple1[T1]] =
     Encoder((w, x) => w.write(x._1))

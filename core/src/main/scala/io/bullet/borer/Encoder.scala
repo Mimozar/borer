@@ -51,27 +51,6 @@ object Encoder extends LowPrioEncoders:
   def apply[T](implicit encoder: Encoder[T]): Encoder[T] = encoder
 
   /**
-    * Allows for somewhat concise [[Encoder]] definition for case classes, without any macro magic.
-    * Can be used e.g. like this:
-    *
-    * {{{
-    * case class Foo(int: Int, string: String, doubleOpt: Option[Double])
-    *
-    * val fooEncoder = Encoder.from(Foo.unapply _)
-    * }}}
-    *
-    * Encodes an instance as a simple array of values.
-    */
-  def from[T, Unapplied](unapply: T => Option[Unapplied])(implicit tupleEnc: Encoder[Unapplied]): Encoder[T] =
-    Encoder((w, x) => tupleEnc.write(w, unapply(x).get))
-
-  /**
-    * Same as the other `from` overload above, but for nullary case classes (i.e. with an empty parameter list).
-    */
-  def from[T](unapply: T => Boolean): Encoder[T] =
-    Encoder((w, x) => if unapply(x) then w.writeEmptyArray() else sys.error("Unapply unexpectedly failed: " + unapply))
-
-  /**
     * Creates a "unified" [[Encoder]] from two encoders that each target only a single data format.
     */
   def targetSpecific[T](cbor: Encoder[T], json: Encoder[T]): Encoder[T] = { (w, x) =>

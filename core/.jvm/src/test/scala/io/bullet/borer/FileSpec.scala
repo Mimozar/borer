@@ -22,7 +22,7 @@ object FileSpec extends TestSuite with TestUtils:
       int: Int = 42,
       double: Double = 0.0)
 
-  given Codec[Foo] = Codec(Encoder.from(unapplyOption(Foo.unapply(_))), Decoder.from(Foo.apply(_, _, _)))
+  given Codec[Foo] = Codec(deriveEnc[Foo], Decoder.from(Foo.apply(_, _, _)))
 
   val tests = Tests {
 

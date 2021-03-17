@@ -27,7 +27,6 @@ lazy val commonSettings = Seq(
     "-encoding", "UTF-8",
     "-feature",
     "-unchecked",
-    "-explain",
     "-Xtarget:8",
     "-Xfatal-warnings",
   ),

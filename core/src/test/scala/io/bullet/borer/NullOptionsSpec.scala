@@ -16,7 +16,7 @@ object NullOptionsSpec extends ByteArrayJsonSpec:
 
   implicit val fooCodec: Codec[Foo] =
     import NullOptions._
-    Codec(Encoder.from(unapplyOption(Foo.unapply(_))), Decoder.from(Foo.apply(_, _)))
+    Codec(deriveEnc[Foo], Decoder.from(Foo.apply(_, _)))
 
   val tests = Tests {
 

@@ -29,5 +29,11 @@ trait TestUtils:
       case c             => f"\\u${c.toInt}%04x"
     }
 
-  def unapplyOption[T <: Product](f: T => T)(using m: Mirror.ProductOf[T]): T => Option[m.MirroredElemTypes] =
-    x => Some(Tuple.fromProduct(x).asInstanceOf[m.MirroredElemTypes])
+  def deriveEnc[T <: Product](using m: Mirror.ProductOf[T])(using te: Encoder[m.MirroredElemTypes]): Encoder[T] =
+    Encoder {
+      (w, x) =>
+        val tuple = 
+          if (x.productArity == 0) EmptyTuple // required until https://github.com/lampepfl/dotty/pull/11793 is fixed
+          else Tuple.fromProduct(x) 
+        te.write(w, tuple.asInstanceOf[m.MirroredElemTypes])
+    }
