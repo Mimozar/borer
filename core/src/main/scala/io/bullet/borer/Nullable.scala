@@ -10,7 +10,7 @@ package io.bullet.borer
 
 final case class Default[+T](defaultValue: T)
 
-object Default {
+object Default:
   implicit val boolean: Default[Boolean] = Default(false)
   implicit val byte: Default[Byte]       = Default(0: Byte)
   implicit val short: Default[Short]     = Default(0: Short)
@@ -26,4 +26,3 @@ object Default {
 
   private[this] val optionDefault            = Default(None)
   implicit def option[T]: Default[Option[T]] = optionDefault
-}

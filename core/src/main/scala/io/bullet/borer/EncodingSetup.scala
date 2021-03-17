@@ -17,9 +17,9 @@ import io.bullet.borer.internal.Renderer
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
-object EncodingSetup {
+object EncodingSetup:
 
-  sealed trait Api[Config <: Borer.EncodingConfig] {
+  sealed trait Api[Config <: Borer.EncodingConfig]:
 
     /**
       * Configures the [[Config]] for this encoding run.
@@ -97,9 +97,8 @@ object EncodingSetup {
       * Encodes an instance of T to the given `target` using the configured options.
       */
     def to[R](target: R)(implicit op: Output.ToValueProvider[R]): Sealed[op.Out, R]
-  }
 
-  sealed trait Sealed[Out <: Output, Result] {
+  sealed trait Sealed[Out <: Output, Result]:
 
     def result: Result
 
@@ -112,16 +111,14 @@ object EncodingSetup {
     def outputTry: Try[Out]
 
     def outputEither: Either[Borer.Error[Out], Out]
-  }
 
-  sealed trait JsonApi[T, Config <: Borer.EncodingConfig] extends Api[Config] {
+  sealed trait JsonApi[T, Config <: Borer.EncodingConfig] extends Api[Config]:
 
     /**
       * Short-cut for encoding to a plain byte array, throwing an exception in case of any failures,
       * and then immediately UTF-8 decoding into a [[String]].
       */
     @inline def toUtf8String: String
-  }
 
   final private[borer] class Impl[T: Encoder, Config <: Borer.EncodingConfig](
       value: T,
@@ -130,7 +127,7 @@ object EncodingSetup {
       defaultWrapper: Receiver.Wrapper[Config],
       rendererCreator: Output => Renderer)
       extends Borer.AbstractSetup[Config](defaultConfig, defaultWrapper) with JsonApi[T, Config]
-      with Sealed[Output, AnyRef] {
+      with Sealed[Output, AnyRef]:
 
     private[this] var _output: Output = _
 
@@ -148,74 +145,59 @@ object EncodingSetup {
 
     def toByteBufferEither: Either[Borer.Error[Output], ByteBuffer] = to[ByteBuffer].resultEither
 
-    def to[R](implicit op: Output.ToTypeProvider[R]): Sealed[op.Out, R] = {
+    def to[R](implicit op: Output.ToTypeProvider[R]): Sealed[op.Out, R] =
       _output = op(config.bufferSize, config.allowBufferCaching)
       this.asInstanceOf[Sealed[op.Out, R]]
-    }
 
-    def to[R](target: R)(implicit op: Output.ToValueProvider[R]): Sealed[op.Out, R] = {
+    def to[R](target: R)(implicit op: Output.ToValueProvider[R]): Sealed[op.Out, R] =
       _output = op(target, config.bufferSize, config.allowBufferCaching)
       this.asInstanceOf[Sealed[op.Out, R]]
-    }
 
-    def result: AnyRef = {
+    def result: AnyRef =
       val renderer = rendererCreator(_output)
-      try {
+      try
         render(renderer).out.result()
-      } catch {
+      catch
         case e: Borer.Error[_] => throw e.withOut(renderer.out)
         case NonFatal(e)       => throw new Borer.Error.General(renderer.out, e)
-      }
-    }
 
-    def resultTry: Try[AnyRef] = {
+    def resultTry: Try[AnyRef] =
       val renderer = rendererCreator(_output)
-      try {
+      try
         Success(render(renderer).out.result())
-      } catch {
+      catch
         case e: Borer.Error[_] => Failure(e.withOut(renderer.out))
         case NonFatal(e)       => Failure(new Borer.Error.General(renderer.out, e))
-      }
-    }
 
-    def resultEither: Either[Borer.Error[Output], AnyRef] = {
+    def resultEither: Either[Borer.Error[Output], AnyRef] =
       val renderer = rendererCreator(_output)
-      try {
+      try
         Right(render(renderer).out.result())
-      } catch {
+      catch
         case e: Borer.Error[_] => Left(e.withOut(renderer.out))
         case NonFatal(e)       => Left(new Borer.Error.General(renderer.out, e))
-      }
-    }
 
     def output: Output = render(rendererCreator(_output)).out
 
-    def outputTry: Try[Output] = {
+    def outputTry: Try[Output] =
       val renderer = rendererCreator(_output)
-      try {
+      try
         Success(render(renderer).out)
-      } catch {
+      catch
         case e: Borer.Error[_] => Failure(e.withOut(renderer.out))
         case NonFatal(e)       => Failure(new Borer.Error.General(renderer.out, e))
-      }
-    }
 
-    def outputEither: Either[Borer.Error[Output], Output] = {
+    def outputEither: Either[Borer.Error[Output], Output] =
       val renderer = rendererCreator(_output)
-      try {
+      try
         Right(render(renderer).out)
-      } catch {
+      catch
         case e: Borer.Error[_] => Left(e.withOut(renderer.out))
         case NonFatal(e)       => Left(new Borer.Error.General(renderer.out, e))
-      }
-    }
 
-    private def render(renderer: Renderer): Renderer = {
+    private def render(renderer: Renderer): Renderer =
       val writer = new Writer(_output, receiverWrapper(renderer, config), target, config)
       writer
         .write(value)
         .writeEndOfInput() // doesn't actually write anything but triggers certain validation checks (if configured)
       renderer
-    }
-  }
-}

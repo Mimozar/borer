@@ -28,22 +28,21 @@ import scala.annotation.{nowarn, tailrec}
   * Cbor.decode(inputBytes).withPrintLogging().to[MyType]
   * }}}
   */
-object Logging {
+object Logging:
 
   def apply[Config](createLogger: LevelInfo => Logger): borer.Receiver.Wrapper[Config] =
     (target, _) => new Receiver(target, createLogger)
 
-  trait LevelInfo {
+  trait LevelInfo:
     def level: Int
     def levelCount: Long
     def levelSize: Long
     def levelType: LevelType
     final def isUnbounded: Boolean = levelSize < 0
-  }
 
   sealed trait LevelType
 
-  object LevelType {
+  object LevelType:
     object Array               extends LevelType
     object UnboundedByteString extends LevelType
     object UnboundedTextString extends LevelType
@@ -51,9 +50,8 @@ object Logging {
     sealed trait MapEntry extends LevelType
     object MapKey         extends MapEntry
     object MapValue       extends MapEntry
-  }
 
-  trait Logger {
+  trait Logger:
     def onNull(): Unit
     def onUndefined(): Unit
     def onBool(value: Boolean): Unit
@@ -79,12 +77,11 @@ object Logging {
     def onSimpleValue(value: Int): Unit
     def onLevelExited(levelType: LevelType, break: Boolean): Unit
     def onEndOfInput(): Unit
-  }
 
   /**
     * A [[Logger]] which formats each incoming element to it's own log line.
     */
-  abstract class LineFormatLogger extends Logger {
+  abstract class LineFormatLogger extends Logger:
     import java.lang.Long.toHexString
 
     def onNull(): Unit                                   = show("null")
@@ -126,11 +123,11 @@ object Logging {
       formatString(new String(ba.toByteArray(value), UTF_8))
 
     def formatString(value: String): String =
-      if (value.length > maxShownStringPrefixLen) {
+      if (value.length > maxShownStringPrefixLen)
         "\"" + value.substring(0, maxShownStringPrefixLen) + "...\""
-      } else "\"" + value + '"'
+      else "\"" + value + '"'
 
-    def show(item: String): Unit = {
+    def show(item: String): Unit =
       val inf             = info
       val levelType       = inf.levelType
       val sze             = inf.levelSize
@@ -138,26 +135,24 @@ object Logging {
       val maxShownInLevel = if (levelType.isInstanceOf[LevelType.MapEntry]) maxShownMapEntries else maxShownArrayElems
       val shownHalf       = maxShownInLevel >> 1
       val ellipsisCount   = sze - shownHalf
-      if (sze <= maxShownInLevel || cnt <= shownHalf + (maxShownInLevel & 1) || cnt > ellipsisCount) {
+      if (sze <= maxShownInLevel || cnt <= shownHalf + (maxShownInLevel & 1) || cnt > ellipsisCount)
         val sb = new java.lang.StringBuilder
         for (_ <- 0 until inf.level) sb.append("    ")
         val levelCount = cnt.toString
-        if (sze >= 0) {
+        if (sze >= 0)
           val s = sze.toString
           for (_ <- 0 until (s.length - levelCount.length)) sb.append(' ')
           sb.append(levelCount).append('/').append(s)
-        } else sb.append(levelCount)
+        else sb.append(levelCount)
         sb.append(": ")
         if (levelType == LevelType.MapValue && item != "]" && item != "}") sb.append("-> ")
         sb.append(item)
         showLine(sb.toString)
-      } else if (cnt == ellipsisCount && levelType != LevelType.MapKey) {
+      else if (cnt == ellipsisCount && levelType != LevelType.MapKey)
         val sb = new java.lang.StringBuilder
         for (_ <- 0 until inf.level) sb.append("    ")
         sb.append("...")
         showLine(sb.toString)
-      }
-    }
 
     def info: LevelInfo
     def maxShownByteArrayPrefixLen: Int
@@ -165,7 +160,6 @@ object Logging {
     def maxShownArrayElems: Int
     def maxShownMapEntries: Int
     def showLine(line: String): Unit
-  }
 
   def PrintLogger(
       maxShownByteArrayPrefixLen: Int = 20,
@@ -183,9 +177,8 @@ object Logging {
       val maxShownArrayElems: Int,
       val maxShownMapEntries: Int,
       val info: LevelInfo)
-      extends LineFormatLogger {
+      extends LineFormatLogger:
     def showLine(line: String): Unit = println(line)
-  }
 
   def ToStringLogger(
       stringBuilder: JStringBuilder,
@@ -214,16 +207,15 @@ object Logging {
       val maxShownMapEntries: Int,
       val lineSeparator: String,
       val info: LevelInfo)
-      extends LineFormatLogger {
+      extends LineFormatLogger:
     def showLine(line: String): Unit = stringBuilder.append(line).append(lineSeparator)
-  }
 
   /**
     * A [[Receiver]] which forwards all incoming data item to another [[Receiver]] and,
     * on the side, feeds a custom [[Logger]] with logging events.
     */
   final class Receiver(target: borer.Receiver, createLogger: LevelInfo => Logger)
-      extends borer.Receiver with LevelInfo {
+      extends borer.Receiver with LevelInfo:
 
     private val logger = createLogger(this)
 
@@ -241,221 +233,190 @@ object Logging {
     def level = _level
 
     def levelCount =
-      if (_level >= 0) {
+      if (_level >= 0)
         val count = _levelCount(_level)
         val size  = _levelSize(_level)
-        val rawCount = if (count >= 0) {
+        val rawCount = if (count >= 0)
           if (size >= 0) count // bounded array
           else count >> 1      // bounded map
-        } else {
+        else
           if (size == 1) ~count >> 1 // unbounded map
           else ~count                // unbounded array, bytes or text
-        }
         rawCount + 1
-      } else 0
+      else 0
 
     def levelSize =
-      if (_level >= 0) {
+      if (_level >= 0)
         val count = _levelCount(_level)
-        if (count >= 0) {
+        if (count >= 0)
           val size = _levelSize(_level)
           if (size >= 0) size // bounded array
           else ~size >> 1     // bounded map
-        } else -1             // unbounded something
-      } else -1
+        else -1             // unbounded something
+      else -1
 
     @nowarn("cat=other-match-analysis")
     def levelType =
-      if (_level >= 0) {
+      if (_level >= 0)
         val count = _levelCount(_level)
         val size  = _levelSize(_level)
-        if (count >= 0) {
+        if (count >= 0)
           if (size >= 0) LevelType.Array
           else if ((count & 1) == 0) LevelType.MapKey
           else LevelType.MapValue
-        } else
-          size match {
+        else
+          size match
             case 0 => LevelType.Array
             case 1 => if ((count & 1) != 0) LevelType.MapKey else LevelType.MapValue
             case 2 => LevelType.UnboundedByteString
             case 3 => LevelType.UnboundedTextString
-          }
-      } else LevelType.Array
+      else LevelType.Array
 
-    def onNull(): Unit = {
+    def onNull(): Unit =
       logger.onNull()
       count()
       target.onNull()
-    }
 
-    def onUndefined(): Unit = {
+    def onUndefined(): Unit =
       logger.onUndefined()
       count()
       target.onUndefined()
-    }
 
-    def onBoolean(value: Boolean): Unit = {
+    def onBoolean(value: Boolean): Unit =
       logger.onBool(value)
       count()
       target.onBoolean(value)
-    }
 
-    def onInt(value: Int): Unit = {
+    def onInt(value: Int): Unit =
       logger.onInt(value)
       count()
       target.onInt(value)
-    }
 
-    def onLong(value: Long): Unit = {
+    def onLong(value: Long): Unit =
       logger.onLong(value)
       count()
       target.onLong(value)
-    }
 
-    def onOverLong(negative: Boolean, value: Long): Unit = {
+    def onOverLong(negative: Boolean, value: Long): Unit =
       logger.onOverLong(negative, value)
       count()
       target.onOverLong(negative, value)
-    }
 
-    def onFloat16(value: Float): Unit = {
+    def onFloat16(value: Float): Unit =
       logger.onFloat16(value)
       count()
       target.onFloat16(value)
-    }
 
-    def onFloat(value: Float): Unit = {
+    def onFloat(value: Float): Unit =
       logger.onFloat(value)
       count()
       target.onFloat(value)
-    }
 
-    def onDouble(value: Double): Unit = {
+    def onDouble(value: Double): Unit =
       logger.onDouble(value)
       count()
       target.onDouble(value)
-    }
 
-    def onNumberString(value: String): Unit = {
+    def onNumberString(value: String): Unit =
       logger.onNumberString(value)
       count()
       target.onNumberString(value)
-    }
 
-    def onBytes[Bytes: ByteAccess](value: Bytes): Unit = {
+    def onBytes[Bytes: ByteAccess](value: Bytes): Unit =
       logger.onBytes(value)
       count()
       target.onBytes(value)
-    }
 
-    def onBytesStart(): Unit = {
+    def onBytesStart(): Unit =
       logger.onBytesStart()
       enterLevel(count = -1, size = 2)
       target.onBytesStart()
-    }
 
-    def onString(value: String): Unit = {
+    def onString(value: String): Unit =
       logger.onString(value)
       count()
       target.onString(value)
-    }
 
-    def onChars(buffer: Array[Char], length: Int): Unit = {
+    def onChars(buffer: Array[Char], length: Int): Unit =
       logger.onChars(buffer, length)
       count()
       target.onChars(buffer, length)
-    }
 
-    def onText[Bytes: ByteAccess](value: Bytes): Unit = {
+    def onText[Bytes: ByteAccess](value: Bytes): Unit =
       logger.onText(value)
       count()
       target.onText(value)
-    }
 
-    def onTextStart(): Unit = {
+    def onTextStart(): Unit =
       logger.onTextStart()
       enterLevel(count = -1, size = 3)
       target.onTextStart()
-    }
 
-    def onArrayHeader(length: Long): Unit = {
+    def onArrayHeader(length: Long): Unit =
       logger.onArrayHeader(length)
       if (length > 0) enterLevel(count = 0, size = length) else count()
       target.onArrayHeader(length)
-    }
 
-    def onArrayStart(): Unit = {
+    def onArrayStart(): Unit =
       logger.onArrayStart()
       enterLevel(count = -1, size = 0)
       target.onArrayStart()
-    }
 
-    def onMapHeader(length: Long): Unit = {
+    def onMapHeader(length: Long): Unit =
       logger.onMapHeader(length)
       if (length > 0) enterLevel(count = 0, size = ~(length << 1)) else count()
       target.onMapHeader(length)
-    }
 
-    def onMapStart(): Unit = {
+    def onMapStart(): Unit =
       logger.onMapStart()
       enterLevel(count = -1, size = 1)
       target.onMapStart()
-    }
 
-    def onBreak(): Unit = {
+    def onBreak(): Unit =
       val exitedLevelType = levelType
       exitLevel()
       logger.onLevelExited(exitedLevelType, break = true)
       count() // level-entering items are only counted when the level is exited, not when they are entered
       target.onBreak()
-    }
 
-    def onTag(value: Tag): Unit = {
+    def onTag(value: Tag): Unit =
       logger.onTag(value)
       target.onTag(value)
-    }
 
-    def onSimpleValue(value: Int): Unit = {
+    def onSimpleValue(value: Int): Unit =
       logger.onSimpleValue(value)
       count()
       target.onSimpleValue(value)
-    }
 
-    def onEndOfInput(): Unit = {
+    def onEndOfInput(): Unit =
       logger.onEndOfInput()
       target.onEndOfInput()
-    }
 
     @tailrec private def count(): Unit =
-      if (_level >= 0) {
+      if (_level >= 0)
         val cnt = _levelCount(_level)
-        if (cnt >= 0) {
+        if (cnt >= 0)
           // bounded array or map
           val newCount = cnt + 1
           val rawSize  = _levelSize(_level)
           val size     = if (rawSize >= 0) rawSize else ~rawSize
-          if (newCount == size) {
+          if (newCount == size)
             val exitedLevelType = levelType
             exitLevel()
             logger.onLevelExited(exitedLevelType, break = false)
             count() // level-entering items are only counted when the level is exited, not when they are entered
-          } else _levelCount(_level) = newCount
-        } else _levelCount(_level) = cnt - 1 // unbounded something
-      }
+          else _levelCount(_level) = newCount
+        else _levelCount(_level) = cnt - 1 // unbounded something
 
-    private def enterLevel(count: Long, size: Long): Unit = {
+    private def enterLevel(count: Long, size: Long): Unit =
       val newLevel = _level + 1
-      if (newLevel == _levelCount.length) {
+      if (newLevel == _levelCount.length)
         val l2     = newLevel << 1
         val newLen = if (l2 >= 0) l2 else Int.MaxValue // overflow protection
         _levelCount = util.Arrays.copyOf(_levelCount, newLen)
         _levelSize = util.Arrays.copyOf(_levelSize, newLen)
-      }
       _level = newLevel
       _levelCount(newLevel) = count
       _levelSize(newLevel) = size
-    }
 
     private def exitLevel(): Unit = _level -= 1
-  }
-}

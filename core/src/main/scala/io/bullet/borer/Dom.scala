@@ -23,7 +23,7 @@ import scala.util.hashing.MurmurHash3
   * Practically all valid CBOR encodings can be decoded into this structure and vice versa.
   * Provided as an alternative to plain [[Writer]]-based encoding and [[Reader]]-based decoding.
   */
-object Dom {
+object Dom:
   import DataItem.{Shifts => DIS}
 
   sealed abstract class Element(val dataItemShift: Int)
@@ -32,10 +32,9 @@ object Dom {
   object UndefinedElem                         extends Element(DIS.Undefined)
   final case class BooleanElem(value: Boolean) extends Element(DIS.Boolean)
 
-  object BooleanElem {
+  object BooleanElem:
     val True  = BooleanElem(true)
     val False = BooleanElem(false)
-  }
 
   final case class IntElem(value: Int)                          extends Element(DIS.Int)
   final case class LongElem(value: Long)                        extends Element(DIS.Long)
@@ -45,13 +44,12 @@ object Dom {
   final case class DoubleElem(value: Double)                    extends Element(DIS.Double)
   final case class NumberStringElem(value: String)              extends Element(DIS.NumberString)
 
-  sealed abstract class AbstractBytesElem(dataItem: Int) extends Element(dataItem) {
+  sealed abstract class AbstractBytesElem(dataItem: Int) extends Element(dataItem):
     def byteCount: Long
     def bytesIterator: Iterator[Array[Byte]]
     def compact: Array[Byte]
-  }
 
-  final case class ByteArrayElem(value: Array[Byte]) extends AbstractBytesElem(DIS.Bytes) {
+  final case class ByteArrayElem(value: Array[Byte]) extends AbstractBytesElem(DIS.Bytes):
     def byteCount                            = value.length.toLong
     def bytesIterator: Iterator[Array[Byte]] = Iterator.single(value)
     def compact                              = value
@@ -59,53 +57,47 @@ object Dom {
     override def hashCode() = util.Arrays.hashCode(value)
 
     override def equals(obj: Any) =
-      obj match {
+      obj match
         case ByteArrayElem(x) => util.Arrays.equals(value, x)
         case _                => false
-      }
-  }
 
-  final case class BytesStreamElem(value: Vector[AbstractBytesElem]) extends AbstractBytesElem(DIS.BytesStart) {
+  final case class BytesStreamElem(value: Vector[AbstractBytesElem]) extends AbstractBytesElem(DIS.BytesStart):
     def byteCount = value.foldLeft(0L)((acc, x) => acc + x.byteCount)
 
     def bytesIterator: Iterator[Array[Byte]] =
       value.foldLeft[Iterator[Array[Byte]]](Iterator.empty)((acc, x) => acc ++ x.bytesIterator)
 
-    def compact: Array[Byte] = {
+    def compact: Array[Byte] =
       val longSize = byteCount
       val len      = longSize.toInt
       if (len.toLong != longSize) sys.error("byte stream with total size > Int.MaxValue cannot be compacted")
       val result = new Array[Byte](len)
       val iter   = bytesIterator
       @tailrec def rec(ix: Int): Array[Byte] =
-        if (ix < len) {
+        if (ix < len)
           val chunk = iter.next()
           System.arraycopy(chunk, 0, result, ix, chunk.length)
           rec(ix + chunk.length)
-        } else result
+        else result
       rec(0)
-    }
-  }
 
-  sealed abstract class AbstractTextElem(dataItem: Int) extends Element(dataItem) {
+  sealed abstract class AbstractTextElem(dataItem: Int) extends Element(dataItem):
     def charCount: Long
     def stringIterator: Iterator[String]
     def compact: String
-  }
 
-  final case class StringElem(value: String) extends AbstractTextElem(DIS.String) {
+  final case class StringElem(value: String) extends AbstractTextElem(DIS.String):
     def charCount                        = value.length.toLong
     def stringIterator: Iterator[String] = Iterator.single(value)
     def compact                          = value
-  }
 
-  final case class TextStreamElem(value: Vector[AbstractTextElem]) extends AbstractTextElem(DIS.TextStart) {
+  final case class TextStreamElem(value: Vector[AbstractTextElem]) extends AbstractTextElem(DIS.TextStart):
     def charCount = value.foldLeft(0L)((acc, x) => acc + x.charCount)
 
     def stringIterator: Iterator[String] =
       value.foldLeft[Iterator[String]](Iterator.empty)((acc, x) => acc ++ x.stringIterator)
 
-    def compact: String = {
+    def compact: String =
       val longSize = charCount
       val len      = longSize.toInt
       if (len.toLong != longSize) sys.error("text stream with total size > Int.MaxValue cannot be compacted")
@@ -113,37 +105,29 @@ object Dom {
       val sb   = new java.lang.StringBuilder(len)
       while (iter.hasNext) sb.append(iter.next())
       sb.toString
-    }
-  }
 
   final case class SimpleValueElem(value: SimpleValue) extends Element(DIS.SimpleValue)
 
-  sealed abstract class ArrayElem(dataItem: Int) extends Element(dataItem) {
+  sealed abstract class ArrayElem(dataItem: Int) extends Element(dataItem):
     def elements: Vector[Element]
-  }
 
-  object ArrayElem {
+  object ArrayElem:
 
-    final case class Sized(elements: Vector[Element]) extends ArrayElem(DIS.ArrayHeader) {
+    final case class Sized(elements: Vector[Element]) extends ArrayElem(DIS.ArrayHeader):
       override def toString = elements.mkString("[", ", ", "]")
-    }
 
-    object Sized {
+    object Sized:
       val empty                     = new Sized(Vector.empty)
       def apply(elements: Element*) = new Sized(elements.toVector)
-    }
 
-    final case class Unsized(elements: Vector[Element]) extends ArrayElem(DIS.ArrayStart) {
+    final case class Unsized(elements: Vector[Element]) extends ArrayElem(DIS.ArrayStart):
       override def toString = elements.mkString("*[", ", ", "]")
-    }
 
-    object Unsized {
+    object Unsized:
       val empty                     = new Unsized(Vector.empty)
       def apply(elements: Element*) = new Unsized(elements.toVector)
-    }
-  }
 
-  sealed abstract class MapElem(private[Dom] val elements: Array[Element], dataItem: Int) extends Element(dataItem) {
+  sealed abstract class MapElem(private[Dom] val elements: Array[Element], dataItem: Int) extends Element(dataItem):
     if ((elements.length & 1) != 0) throw new IllegalArgumentException
 
     @inline final def size: Int                                        = elements.length >> 1
@@ -153,30 +137,26 @@ object Dom {
     @inline final def keys: Iterator[Element]                          = new MapElem.KVIterator(elements, 0)
     @inline final def values: Iterator[Element]                        = new MapElem.KVIterator(elements, 1)
 
-    def apply(key: String): Option[Element] = {
+    def apply(key: String): Option[Element] =
       @tailrec def rec(ix: Int): Option[Element] =
-        if (ix < elements.length) {
-          elements(ix) match {
+        if (ix < elements.length)
+          elements(ix) match
             case StringElem(`key`) => Some(elements(ix + 1))
             case _                 => rec(ix + 2)
-          }
-        } else None
+        else None
       rec(0)
-    }
 
-    def apply(key: Element): Option[Element] = {
+    def apply(key: Element): Option[Element] =
       @tailrec def rec(ix: Int): Option[Element] =
         if (ix < elements.length) if (elements(ix) == key) Some(elements(ix + 1)) else rec(ix + 2) else None
       rec(0)
-    }
 
-    final def toMap: HashMap[Element, Element] = {
+    final def toMap: HashMap[Element, Element] =
       val k = keys
       val v = values
       @tailrec def rec(m: HashMap[Element, Element]): HashMap[Element, Element] =
         if (k.hasNext) rec(m.updated(k.next(), v.next())) else m
       rec(HashMap.empty)
-    }
 
     final override def toString =
       keys
@@ -184,80 +164,71 @@ object Dom {
         .map(x => x._1.toString + ": " + x._2)
         .mkString(if (dataItem == DIS.MapStart) "*{" else "{", ", ", "}")
 
-    final override def hashCode() = {
+    final override def hashCode() =
       import scala.runtime.Statics.{finalizeHash, mix}
       finalizeHash(mix(mix(mix(-889275714, size), MurmurHash3.arrayHash(elements)), dataItem), 3)
-    }
 
     final override def equals(obj: Any) =
-      obj match {
+      obj match
         case that: MapElem =>
           this.dataItemShift == that.dataItemShift && util.Arrays
             .equals(this.elements.asInstanceOf[Array[Object]], that.elements.asInstanceOf[Array[Object]])
         case _ => false
-      }
-  }
 
-  object MapElem {
+  object MapElem:
 
     final class Sized private[Dom] (elements: Array[Element]) extends MapElem(elements, DIS.MapHeader)
 
-    object Sized {
+    object Sized:
       private[this] val create                                             = new Sized(_)
       val empty                                                            = new Sized(Array.empty)
       def apply(first: (String, Element), more: (String, Element)*): Sized = construct(first +: more, create)
       def apply(entries: (Element, Element)*): Sized                       = construct(entries, create)
       def apply(entries: collection.Map[Element, Element]): Sized          = construct(entries, create)
       def unapply(value: Sized): Sized                                     = value
-    }
 
     final class Unsized private[Dom] (elements: Array[Element]) extends MapElem(elements, DIS.MapStart)
 
-    object Unsized {
+    object Unsized:
       private[this] val create                                               = new Unsized(_)
       val empty                                                              = new Unsized(Array.empty)
       def apply(first: (String, Element), more: (String, Element)*): Unsized = construct(first +: more, create)
       def apply(entries: (Element, Element)*): Unsized                       = construct(entries, create)
       def apply(entries: collection.Map[Element, Element]): Unsized          = construct(entries, create)
       def unapply(value: Unsized): Unsized                                   = value
-    }
 
     @nowarn("cat=other-match-analysis")
-    private def construct[T](entries: Iterable[(AnyRef, Element)], f: Array[Element] => T): T = {
+    private def construct[T](entries: Iterable[(AnyRef, Element)], f: Array[Element] => T): T =
       val elements = new mutable.ArrayBuilder.ofRef[Dom.Element]
       elements.sizeHint(entries.size << 1)
       entries.foreach { case (key, value) =>
-        var keyElem = key match {
+        var keyElem = key match
           case x: String  => StringElem(x)
           case x: Element => x
-        }
         elements += keyElem += value
       }
       f(elements.result())
-    }
 
-    final private class KVIterator(elements: Array[Element], startIndex: Int) extends Iterator[Element] {
+    final private class KVIterator(elements: Array[Element], startIndex: Int) extends Iterator[Element]:
       private[this] var ix = startIndex
       def hasNext          = ix < elements.length
 
       def next() =
-        if (hasNext) {
+        if (hasNext)
           val elem = elements(ix)
           ix += 2
           elem
-        } else Iterator.empty.next()
-    }
-  }
+        else Iterator.empty.next()
 
   final case class TaggedElem(tag: Tag, value: Element) extends Element(DIS.Tag)
 
   implicit def encoder[T <: Element]: Encoder[T] = elementEncoder.asInstanceOf[Encoder[T]]
 
-  val elementEncoder: Encoder[Element] = {
+  val elementEncoder: Encoder[Element] =
     val writeElement = (w: Writer, x: Element) => w.write(x)
 
     Encoder { (w, x) =>
-      (x.dataItemShift: @switch) match {
+      (x.dataItemShift: @switch) match
         case DIS.Null      => w.writeNull()
         case DIS.Undefined => w.writeUndefined()
         case DIS.Boolean   => w.writeBoolean(x.asInstanceOf[BooleanElem].value)
@@ -301,32 +272,30 @@ object Dom {
           rec(w.writeMapStart(), 0).writeBreak()
 
         case DIS.Tag => val n = x.asInstanceOf[TaggedElem]; w.writeTag(n.tag).write(n.value)
-      }
     }
-  }
 
   implicit def decoder[T <: Element]: Decoder[T] = elementDecoder.asInstanceOf[Decoder[T]]
 
-  val elementDecoder: Decoder[Element] = {
+  val elementDecoder: Decoder[Element] =
     val bytesDecoder: Decoder[Vector[AbstractBytesElem]] = Decoder { r =>
       r.readBytesStart()
-      if (!r.tryReadBreak()) {
+      if (!r.tryReadBreak())
         val b = new immutable.VectorBuilder[AbstractBytesElem]
         while (!r.tryReadBreak()) b += r.read[AbstractBytesElem]()
         b.result()
-      } else Vector.empty
+      else Vector.empty
     }
     val textDecoder: Decoder[Vector[AbstractTextElem]] = Decoder { r =>
       r.readTextStart()
-      if (!r.tryReadBreak()) {
+      if (!r.tryReadBreak())
         val b = new immutable.VectorBuilder[AbstractTextElem]
         while (!r.tryReadBreak()) b += r.read[AbstractTextElem]()
         b.result()
-      } else Vector.empty
+      else Vector.empty
     }
 
     Decoder { r =>
-      (Integer.numberOfTrailingZeros(r.dataItem()): @switch) match {
+      (Integer.numberOfTrailingZeros(r.dataItem()): @switch) match
         case DIS.Null      => r.readNull(); NullElem
         case DIS.Undefined => r.readUndefined(); UndefinedElem
         case DIS.Boolean   => if (r.readBoolean()) BooleanElem.True else BooleanElem.False
@@ -351,33 +320,31 @@ object Dom {
         case DIS.ArrayStart  => ArrayElem.Unsized(r.read[Vector[Element]]())
 
         case DIS.MapHeader =>
-          if (!r.tryReadMapHeader(0)) {
+          if (!r.tryReadMapHeader(0))
             val elements = new mutable.ArrayBuilder.ofRef[Dom.Element]
             val size     = r.readMapHeader()
             val count    = size.toInt
             if (size > Int.MaxValue) r.overflow("Dom.MapElem does not support more than 2^30 elements")
             elements.sizeHint(count)
             @tailrec def rec(remaining: Int): MapElem.Sized =
-              if (remaining > 0) {
+              if (remaining > 0)
                 elements += r.read[Element]() += r.read[Element]()
                 rec(remaining - 1)
-              } else new MapElem.Sized(elements.result())
+              else new MapElem.Sized(elements.result())
             rec(count)
-          } else MapElem.Sized.empty
+          else MapElem.Sized.empty
 
         case DIS.MapStart =>
           r.skipDataItem()
-          if (!r.tryReadBreak()) {
+          if (!r.tryReadBreak())
             @tailrec def rec(elements: mutable.ArrayBuilder.ofRef[Dom.Element]): MapElem.Unsized =
               if (r.tryReadBreak()) new MapElem.Unsized(elements.result())
               else rec(elements += r.read[Element]() += r.read[Element]())
             rec(new mutable.ArrayBuilder.ofRef[Dom.Element])
-          } else MapElem.Unsized.empty
+          else MapElem.Unsized.empty
 
         case DIS.Tag => TaggedElem(r.readTag(), r.read[Element]())
-      }
     }
-  }
 
   /**
     * A [[Dom.Transformer]] encapsulates the ability for arbitrary DOM transformations.
@@ -385,10 +352,10 @@ object Dom {
     *
     * Override some or all methods to customize the transformation logic.
     */
-  trait Transformer extends (Element => Element) {
+  trait Transformer extends (Element => Element):
 
     def apply(elem: Element): Element =
-      (elem.dataItemShift: @switch) match {
+      (elem.dataItemShift: @switch) match
         case DIS.Null         => transformNull()
         case DIS.Undefined    => transformUndefined()
         case DIS.Boolean      => transformBoolean(elem.asInstanceOf[BooleanElem])
@@ -409,7 +376,6 @@ object Dom {
         case DIS.MapHeader    => transformMapHeader(elem.asInstanceOf[MapElem.Sized])
         case DIS.MapStart     => transformMapStart(elem.asInstanceOf[MapElem.Unsized])
         case DIS.Tag          => transformTag(elem.asInstanceOf[TaggedElem])
-      }
 
     def transformNull(): Element                               = NullElem
     def transformUndefined(): Element                          = UndefinedElem
@@ -433,9 +399,8 @@ object Dom {
     def transformArrayStart(elem: ArrayElem.Unsized): Element  = ArrayElem.Unsized(elem.elements.map(this))
     def transformMapHeader(elem: MapElem.Sized): Element       = new MapElem.Sized(elem.elements.map(this))
     def transformMapStart(elem: MapElem.Unsized): Element      = new MapElem.Unsized(elem.elements.map(this))
-  }
 
-  object Transformer {
+  object Transformer:
 
     /**
       * A [[Transformer]] that converts certain DOM elements of a given DOM structure that are not supported by the
@@ -457,7 +422,7 @@ object Dom {
       * provides merely one of many possible such implementations.
       * Override the respective methods in order to customize the logic!
       */
-    trait ToJsonSubset extends Transformer {
+    trait ToJsonSubset extends Transformer:
       val bytesEncoding: BaseEncoding = BaseEncoding.base64
 
       override def transformUndefined(): Element                = NullElem
@@ -477,6 +442,3 @@ object Dom {
 
       override def transformMapHeader(elem: MapElem.Sized): Element =
         new MapElem.Unsized(elem.elements.map(this))
-    }
-  }
-}

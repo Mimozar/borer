@@ -16,7 +16,7 @@ import utest._
 import scala.collection.immutable.ListMap
 import scala.util.Random
 
-abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec {
+abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec:
 
   val tests = Tests {
 
@@ -70,7 +70,7 @@ abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec {
       roundTrip("100000.0", 100000.0f)
       roundTrip("100000.0", 100000.0)
 
-      if (isJVM) {
+      if (isJVM)
         roundTrip("-0.0", -0.0f)
         roundTrip("-0.0", -0.0)
 
@@ -83,7 +83,6 @@ abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec {
         roundTrip("1.0E300", 1.0e+300)
 
         roundTrip("[2.10233856E8]", List(2.10233856e8f))
-      }
 
       roundTrip("-4.0", -4.0f)
       roundTrip("-4.0", -4.0)
@@ -184,11 +183,10 @@ abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec {
           number  <- "123456789123456789123456".tails.toList.init
           ix      <- (-1 until number.length).toList
           trailer <- List("", " ")
-        } yield ix match {
+        } yield ix match
           case -1                     => number + trailer
           case 0                      => "0." + number + trailer
           case x if x < number.length => number.substring(0, x) + "." + number.substring(x)
-        }
       val json0                                = numbers.mkString("[", ",", "]")
       val dom0 @ Dom.ArrayElem.Unsized(elems0) = decode[Dom.Element](json0).asInstanceOf[Dom.ArrayElem.Unsized]
       val json1                                = encode(dom0)
@@ -338,4 +336,3 @@ abstract class AbstractJsonSuiteSpec extends AbstractBorerSpec {
       "Expected JSON value but got ',' (input position 4)"
     }
   }
-}

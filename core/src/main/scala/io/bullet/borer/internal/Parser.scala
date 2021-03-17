@@ -13,7 +13,7 @@ import io.bullet.borer.{ByteAccess, Input, Receiver}
 /**
   * Common parent type of [[io.bullet.borer.cbor.CborParser]] and [[io.bullet.borer.json.JsonParser]]
   */
-abstract private[borer] class Parser[Bytes] extends Input.PaddingProvider[Bytes] {
+abstract private[borer] class Parser[Bytes] extends Input.PaddingProvider[Bytes]:
 
   /**
     * The [[Input]] the parser is parsing from.
@@ -31,9 +31,8 @@ abstract private[borer] class Parser[Bytes] extends Input.PaddingProvider[Bytes]
     * The returned `Int` is the [[io.bullet.borer.DataItem]] code for the value the [[Receiver]] received.
     */
   def pull(receiver: Receiver): Int
-}
 
-private[borer] object Parser {
+private[borer] object Parser:
 
   type Creator[Bytes, Config] = (Input[Bytes], ByteAccess[Bytes], Config) => Parser[Bytes]
 
@@ -41,4 +40,3 @@ private[borer] object Parser {
   private[this] val _nopWrapper: Wrapper[Any] = (receiver, _) => receiver
 
   def nopWrapper[Config]: Wrapper[Config] = _nopWrapper.asInstanceOf[Wrapper[Config]]
-}
