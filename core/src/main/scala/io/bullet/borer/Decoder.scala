@@ -22,7 +22,7 @@ import io.bullet.borer.encodings.BaseEncoding
 import io.bullet.borer.internal.Util
 
 import scala.annotation.tailrec
-import scala.collection.compat._
+import scala.collection.Factory
 import scala.collection.immutable.{HashMap, ListMap, TreeMap}
 import scala.collection.mutable
 import scala.reflect.ClassTag

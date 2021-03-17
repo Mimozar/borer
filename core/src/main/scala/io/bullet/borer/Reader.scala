@@ -15,7 +15,7 @@ import io.bullet.borer.json.JsonParser
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.collection.compat._
+import scala.collection.Factory
 
 /**
   * Stateful, mutable abstraction for reading a stream of CBOR or JSON data from the given `input`.
