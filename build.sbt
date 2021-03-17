@@ -5,14 +5,25 @@ def scala30 = "3.0.0-RC1"
 def scala213 = "2.13.5"
 def scala212 = "2.12.13"
 
+inThisBuild(
+  List(
+    organization := "io.bullet",
+    homepage := Some(new URL("https://github.com/sirthias/borer/")),
+    description := "CBOR and JSON (de)serialization in Scala",
+    startYear := Some(2019),
+    licenses := Seq("MPLv2" → new URL("https://www.mozilla.org/en-US/MPL/2.0/")),
+    scmInfo := Some(ScmInfo(url("https://github.com/sirthias/borer/"), "scm:git:git@github.com:sirthias/borer.git")),
+    developers :=
+      List(
+        "sirthias" -> "Mathias Doenitz",
+      ).map { case (username, fullName) =>
+        Developer(username, fullName, s"@$username", url(s"https://github.com/$username"))
+      }
+  )
+)
+
+
 lazy val commonSettings = Seq(
-  organization := "io.bullet",
-  homepage := Some(new URL("https://github.com/sirthias/borer/")),
-  description := "CBOR and JSON (de)serialization in Scala",
-  startYear := Some(2019),
-  licenses := Seq("MPLv2" → new URL("https://www.mozilla.org/en-US/MPL/2.0/")),
-  unmanagedResources in Compile += baseDirectory.value.getParentFile.getParentFile / "LICENSE",
-  scmInfo := Some(ScmInfo(url("https://github.com/sirthias/borer/"), "scm:git:git@github.com:sirthias/borer.git")),
 
   scalaVersion := scala213,
   crossScalaVersions := Seq(scala212, scala213, scala30),
@@ -50,11 +61,11 @@ lazy val commonSettings = Seq(
       )
 
       case Some((3, 0)) => Seq(
-        "-release:8",
         "-source:3.0-migration",
         "-explain",
         "-explain-types",
         "-language:implicitConversions",
+        "-Xtarget:8",
         "-Xfatal-warnings",
       )
 
@@ -62,10 +73,12 @@ lazy val commonSettings = Seq(
     }
   },
 
-  scalacOptions in (Compile, console) ~= (_ filterNot(o => o.contains("warn") || o.contains("Xlint"))),
-  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value,
-  scalacOptions in (Compile, doc) += "-no-link-warnings",
+  Compile / console / scalacOptions ~= (_ filterNot(o => o.contains("warn") || o.contains("Xlint"))),
+  Test / console / scalacOptions := (Compile / console / scalacOptions).value,
+  Compile / doc / scalacOptions += "-no-link-warnings",
   sourcesInBase := false,
+
+  Compile / unmanagedResources += baseDirectory.value.getParentFile.getParentFile / "LICENSE",
 
   // file headers
   headerLicense := Some(HeaderLicense.MPLv2("2019-2021", "Mathias Doenitz")),
@@ -74,21 +87,17 @@ lazy val commonSettings = Seq(
   scalafmtOnCompile := true,
 
   testFrameworks += new TestFramework("utest.runner.Framework"),
-  initialCommands in console := """import io.bullet.borer._""",
+  console / initialCommands := """import io.bullet.borer._""",
 
   // publishing
   publishMavenStyle := true,
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
   pomIncludeRepository := (_ ⇒ false),
   publishTo := sonatypePublishToBundle.value,
   mimaFailOnNoPrevious := false,
 
   // we need this resolver to let Travis CI find new release artifacts before they are available from Maven Central
   resolvers += Resolver.sonatypeRepo("staging"),
-
-  developers := List(
-    Developer("sirthias", "Mathias Doenitz", "devnull@bullet.io", url("https://github.com/sirthias/"))
-  ),
 
   // test coverage
   coverageMinimum := 90,
@@ -136,13 +145,18 @@ lazy val mimaSettings = {
 }
 
 lazy val crossSettings = Seq(
-  sourceDirectories in (Compile, scalafmt) := (unmanagedSourceDirectories in Compile).value,
-  sourceDirectories in (Test, scalafmt) := (unmanagedSourceDirectories in Test).value
+  Compile / unmanagedSourceDirectories +=
+    file(CrossType.Pure.sharedSrcDir(baseDirectory.value, "main").get.getPath + "-" + scalaVersion.value.take(1)),
+  Test / unmanagedSourceDirectories +=
+    file(CrossType.Pure.sharedSrcDir(baseDirectory.value, "test").get.getPath + "-" + scalaVersion.value.take(1)),
+
+  Compile / scalafmt / sourceDirectories := (Compile / unmanagedSourceDirectories).value,
+  Test / scalafmt / sourceDirectories := (Test / unmanagedSourceDirectories).value,
 )
 
 lazy val scalajsSettings = Seq(
   scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule).withSourceMap(false)),
-  scalaJSStage in Global := FastOptStage,
+  Global / scalaJSStage := FastOptStage,
   scalacOptions ~= { _.filterNot(_ == "-Ywarn-dead-code") }
 )
 
@@ -166,6 +180,20 @@ lazy val releaseSettings = {
     )
   )
 }
+
+lazy val noPublishSettings = Seq(
+  publish := {},
+  publishLocal := {},
+  publishArtifact := false,
+  publish / skip := true
+)
+
+lazy val scala2onlySettings = Seq(
+  compile / skip := scalaVersion.value.startsWith("3"),
+  test / skip := scalaVersion.value.startsWith("3"),
+  publish / skip := scalaVersion.value.startsWith("3"),
+  libraryDependencies := (if (scalaVersion.value.startsWith("3")) Nil else libraryDependencies.value)
+)
 
 lazy val macroParadise =
   libraryDependencies ++= {
@@ -227,18 +255,6 @@ addCommandsAlias(
   )
 )
 
-// copied from cats build
-def scalaVersionSpecificFolders(srcName: String, srcBaseDir: File, scalaVersion: String): List[File] = {
-  def extraDirs(suffix: String) =
-    List(CrossType.Pure, CrossType.Full)
-      .flatMap(_.sharedSrcDir(srcBaseDir, srcName).toList.map(f => file(f.getPath + suffix)))
-
-  CrossVersion.partialVersion(scalaVersion) match {
-    case Some((0 | 3, _)) => extraDirs("-3.x")
-    case _                => Nil
-  }
-}
-
 /////////////////////// DEPENDENCIES /////////////////////////
 
 val `akka-actor`        = Def.setting("com.typesafe.akka"      %%  "akka-actor-typed"        % "2.6.13")
@@ -266,10 +282,10 @@ lazy val borer = project.in(file("."))
   .aggregate(benchmarks)
   .aggregate(site)
   .disablePlugins(MimaPlugin)
-  .settings(commonSettings)
   .settings(releaseSettings)
+  .settings(noPublishSettings)
   .settings(
-    publish / skip := true,
+    crossScalaVersions := Nil,
     onLoadMessage := welcomeMessage.value
   )
 
@@ -291,9 +307,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     // point sbt-boilerplate to the common "project"
     Compile / boilerplateSource := baseDirectory.value.getParentFile / "src" / "main" / "boilerplate",
     Compile / sourceManaged := baseDirectory.value.getParentFile / "target" / "scala" / "src_managed" / "main",
-
-    Compile / unmanagedSourceDirectories ++= scalaVersionSpecificFolders("main", baseDirectory.value, scalaVersion.value),
-    Test / unmanagedSourceDirectories ++= scalaVersionSpecificFolders("test", baseDirectory.value, scalaVersion.value),
   )
   .jvmSettings(
     Compile / specializeJsonParser / sourceDirectory := baseDirectory.value.getParentFile / "src" / "main",
@@ -317,6 +330,7 @@ lazy val `compat-akka` = project
       `akka-http`.value % "provided",
       utest.value)
   )
+  .settings(scala2onlySettings)
 
 lazy val `compat-cats-jvm` = `compat-cats`.jvm
   .dependsOn(`core-jvm` % "compile->compile;test->test")
@@ -345,9 +359,11 @@ lazy val `compat-cats` = crossProject(JSPlatform, JVMPlatform)
 lazy val `compat-circe-jvm` = `compat-circe`.jvm
   .dependsOn(`core-jvm` % "compile->compile;test->test")
   .dependsOn(`derivation-jvm` % "test->compile")
+  .settings(scala2onlySettings)
 lazy val `compat-circe-js`  = `compat-circe`.js
   .dependsOn(`core-js`   % "compile->compile;test->test")
   .dependsOn(`derivation-js` % "test->compile")
+  .settings(scala2onlySettings)
 lazy val `compat-circe` = crossProject(JSPlatform, JVMPlatform)
   .withoutSuffixFor(JVMPlatform)
   .crossType(CrossType.Pure)
@@ -371,9 +387,11 @@ lazy val `compat-circe` = crossProject(JSPlatform, JVMPlatform)
 lazy val `compat-scodec-jvm` = `compat-scodec`.jvm
   .dependsOn(`core-jvm` % "compile->compile;test->test")
   .dependsOn(`derivation-jvm` % "test->compile")
+  .settings(scala2onlySettings)
 lazy val `compat-scodec-js`  = `compat-scodec`.js
   .dependsOn(`core-js`   % "compile->compile;test->test")
   .dependsOn(`derivation-js` % "test->compile")
+  .settings(scala2onlySettings)
 lazy val `compat-scodec` = crossProject(JSPlatform, JVMPlatform)
   .withoutSuffixFor(JVMPlatform)
   .crossType(CrossType.Pure)
@@ -405,7 +423,10 @@ lazy val derivation = crossProject(JSPlatform, JVMPlatform)
   .settings(mimaSettings)
   .settings(
     moduleName := "borer-derivation",
-    libraryDependencies ++= Seq(`scala-compiler`.value, `scala-reflect`.value, utest.value),
+    libraryDependencies ++= (
+      if (scalaVersion.value startsWith "3") Seq(utest.value)
+      else Seq(`scala-compiler`.value, `scala-reflect`.value, utest.value)
+    ),
   )
   .jsSettings(scalajsSettings: _*)
 
@@ -414,8 +435,8 @@ lazy val benchmarks = project
   .disablePlugins(MimaPlugin)
   .dependsOn(`core-jvm`, `derivation-jvm`)
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
-    skip in publish := true,
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core"        % "2.6.4",
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros"      % "2.6.4" % Provided,
@@ -428,6 +449,7 @@ lazy val benchmarks = project
       `circe-derivation`.value,
     )
   )
+  .settings(scala2onlySettings)
 
 lazy val site = project
   .in(file("site"))
@@ -440,8 +462,8 @@ lazy val site = project
   )
   .disablePlugins(MimaPlugin)
   .settings(commonSettings)
+  .settings(noPublishSettings)
   .settings(
-    publish / skip := true,
     libraryDependencies ++= Seq(`akka-actor`.value, `akka-stream`.value, `akka-http`.value, utest.value),
 
     com.typesafe.sbt.SbtGit.GitKeys.gitRemoteRepo := scmInfo.value.get.connection.drop("scm:git:".length),
@@ -480,6 +502,7 @@ lazy val site = project
       "snip.core.base_dir" -> s"${baseDirectory.value}/../core/src/main/scala/io/bullet/borer",
     )
   )
+  .settings(scala2onlySettings)
 
 // welcome message in the style of zio.dev
 def welcomeMessage = Def.setting {
