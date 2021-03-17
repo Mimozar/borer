@@ -22,7 +22,7 @@ object Default:
 
   @inline def of[T](implicit d: Default[T]): T = d.defaultValue
 
-  @inline def orValue[T: Default](value: T): T = if (value == null) Default.of[T] else value
+  @inline def orValue[T: Default](value: T): T = if value == null then Default.of[T] else value
 
   private[this] val optionDefault            = Default(None)
   implicit def option[T]: Default[Option[T]] = optionDefault

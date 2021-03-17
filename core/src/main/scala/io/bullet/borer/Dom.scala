@@ -70,11 +70,11 @@ object Dom:
     def compact: Array[Byte] =
       val longSize = byteCount
       val len      = longSize.toInt
-      if (len.toLong != longSize) sys.error("byte stream with total size > Int.MaxValue cannot be compacted")
+      if len.toLong != longSize then sys.error("byte stream with total size > Int.MaxValue cannot be compacted")
       val result = new Array[Byte](len)
       val iter   = bytesIterator
       @tailrec def rec(ix: Int): Array[Byte] =
-        if (ix < len)
+        if ix < len then
           val chunk = iter.next()
           System.arraycopy(chunk, 0, result, ix, chunk.length)
           rec(ix + chunk.length)
@@ -100,10 +100,10 @@ object Dom:
     def compact: String =
       val longSize = charCount
       val len      = longSize.toInt
-      if (len.toLong != longSize) sys.error("text stream with total size > Int.MaxValue cannot be compacted")
+      if len.toLong != longSize then sys.error("text stream with total size > Int.MaxValue cannot be compacted")
       val iter = stringIterator
       val sb   = new java.lang.StringBuilder(len)
-      while (iter.hasNext) sb.append(iter.next())
+      while iter.hasNext do sb.append(iter.next())
       sb.toString
 
   final case class SimpleValueElem(value: SimpleValue) extends Element(DIS.SimpleValue)
@@ -128,7 +128,7 @@ object Dom:
       def apply(elements: Element*) = new Unsized(elements.toVector)
 
   sealed abstract class MapElem(private[Dom] val elements: Array[Element], dataItem: Int) extends Element(dataItem):
-    if ((elements.length & 1) != 0) throw new IllegalArgumentException
+    if (elements.length & 1) != 0 then throw new IllegalArgumentException
 
     @inline final def size: Int                                        = elements.length >> 1
     @inline final def elementsInterleaved: IndexedSeq[Element]         = ArraySeq.unsafeWrapArray(elements)
@@ -139,7 +139,7 @@ object Dom:
 
     def apply(key: String): Option[Element] =
       @tailrec def rec(ix: Int): Option[Element] =
-        if (ix < elements.length)
+        if ix < elements.length then
           elements(ix) match
             case StringElem(`key`) => Some(elements(ix + 1))
             case _                 => rec(ix + 2)
@@ -148,21 +148,21 @@ object Dom:
 
     def apply(key: Element): Option[Element] =
       @tailrec def rec(ix: Int): Option[Element] =
-        if (ix < elements.length) if (elements(ix) == key) Some(elements(ix + 1)) else rec(ix + 2) else None
+        if ix < elements.length then if elements(ix) == key then Some(elements(ix + 1)) else rec(ix + 2) else None
       rec(0)
 
     final def toMap: HashMap[Element, Element] =
       val k = keys
       val v = values
       @tailrec def rec(m: HashMap[Element, Element]): HashMap[Element, Element] =
-        if (k.hasNext) rec(m.updated(k.next(), v.next())) else m
+        if k.hasNext then rec(m.updated(k.next(), v.next())) else m
       rec(HashMap.empty)
 
     final override def toString =
       keys
         .zip(values)
         .map(x => x._1.toString + ": " + x._2)
-        .mkString(if (dataItem == DIS.MapStart) "*{" else "{", ", ", "}")
+        .mkString(if dataItem == DIS.MapStart then "*{" else "{", ", ", "}")
 
     final override def hashCode() =
       import scala.runtime.Statics.{finalizeHash, mix}
@@ -214,7 +214,7 @@ object Dom:
       def hasNext          = ix < elements.length
 
       def next() =
-        if (hasNext)
+        if hasNext then
           val elem = elements(ix)
           ix += 2
           elem
@@ -261,14 +261,14 @@ object Dom:
           val m     = x.asInstanceOf[MapElem.Sized]
           val array = m.elements
           @tailrec def rec(w: Writer, ix: Int): w.type =
-            if (ix < array.length) rec(w.write(array(ix)).write(array(ix + 1)), ix + 2) else w
+            if ix < array.length then rec(w.write(array(ix)).write(array(ix + 1)), ix + 2) else w
           rec(w.writeMapHeader(m.size), 0)
 
         case DIS.MapStart =>
           val m     = x.asInstanceOf[MapElem.Unsized]
           val array = m.elements
           @tailrec def rec(w: Writer, ix: Int): w.type =
-            if (ix < array.length) rec(w.write(array(ix)).write(array(ix + 1)), ix + 2) else w
+            if ix < array.length then rec(w.write(array(ix)).write(array(ix + 1)), ix + 2) else w
           rec(w.writeMapStart(), 0).writeBreak()
 
         case DIS.Tag => val n = x.asInstanceOf[TaggedElem]; w.writeTag(n.tag).write(n.value)
@@ -279,17 +279,17 @@ object Dom:
   val elementDecoder: Decoder[Element] =
     val bytesDecoder: Decoder[Vector[AbstractBytesElem]] = Decoder { r =>
       r.readBytesStart()
-      if (!r.tryReadBreak())
+      if !r.tryReadBreak() then
         val b = new immutable.VectorBuilder[AbstractBytesElem]
-        while (!r.tryReadBreak()) b += r.read[AbstractBytesElem]()
+        while !r.tryReadBreak() do b += r.read[AbstractBytesElem]()
         b.result()
       else Vector.empty
     }
     val textDecoder: Decoder[Vector[AbstractTextElem]] = Decoder { r =>
       r.readTextStart()
-      if (!r.tryReadBreak())
+      if !r.tryReadBreak() then
         val b = new immutable.VectorBuilder[AbstractTextElem]
-        while (!r.tryReadBreak()) b += r.read[AbstractTextElem]()
+        while !r.tryReadBreak() do b += r.read[AbstractTextElem]()
         b.result()
       else Vector.empty
     }
@@ -298,7 +298,7 @@ object Dom:
       (Integer.numberOfTrailingZeros(r.dataItem()): @switch) match
         case DIS.Null      => r.readNull(); NullElem
         case DIS.Undefined => r.readUndefined(); UndefinedElem
-        case DIS.Boolean   => if (r.readBoolean()) BooleanElem.True else BooleanElem.False
+        case DIS.Boolean   => if r.readBoolean() then BooleanElem.True else BooleanElem.False
 
         case DIS.Int          => IntElem(r.readInt())
         case DIS.Long         => LongElem(r.readLong())
@@ -320,14 +320,14 @@ object Dom:
         case DIS.ArrayStart  => ArrayElem.Unsized(r.read[Vector[Element]]())
 
         case DIS.MapHeader =>
-          if (!r.tryReadMapHeader(0))
+          if !r.tryReadMapHeader(0) then
             val elements = new mutable.ArrayBuilder.ofRef[Dom.Element]
             val size     = r.readMapHeader()
             val count    = size.toInt
-            if (size > Int.MaxValue) r.overflow("Dom.MapElem does not support more than 2^30 elements")
+            if size > Int.MaxValue then r.overflow("Dom.MapElem does not support more than 2^30 elements")
             elements.sizeHint(count)
             @tailrec def rec(remaining: Int): MapElem.Sized =
-              if (remaining > 0)
+              if remaining > 0 then
                 elements += r.read[Element]() += r.read[Element]()
                 rec(remaining - 1)
               else new MapElem.Sized(elements.result())
@@ -336,9 +336,9 @@ object Dom:
 
         case DIS.MapStart =>
           r.skipDataItem()
-          if (!r.tryReadBreak())
+          if !r.tryReadBreak() then
             @tailrec def rec(elements: mutable.ArrayBuilder.ofRef[Dom.Element]): MapElem.Unsized =
-              if (r.tryReadBreak()) new MapElem.Unsized(elements.result())
+              if r.tryReadBreak() then new MapElem.Unsized(elements.result())
               else rec(elements += r.read[Element]() += r.read[Element]())
             rec(new mutable.ArrayBuilder.ofRef[Dom.Element])
           else MapElem.Unsized.empty

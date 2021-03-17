@@ -13,7 +13,7 @@ import io.bullet.borer.internal.ByteArrayAccess
 import scala.annotation.tailrec
 
 final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(name, 5, alphabet):
-  if (alphabetChars.length != 32) throw new IllegalArgumentException
+  if alphabetChars.length != 32 then throw new IllegalArgumentException
 
   def encode(bytes: Array[Byte]): Array[Char] =
     val sl = bytes.length
@@ -22,7 +22,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
       throw new IllegalArgumentException(
         s"Overflow: Cannot $name-encode a byte array with size > 1.342.177.279 (was: $sl")
 
-    if (sl > 1342177279) failOverflow()
+    if sl > 1342177279 then failOverflow()
 
     val result = new Array[Char](((sl + 4) / 5) << 3)
     val baa    = ByteArrayAccess.instance
@@ -76,7 +76,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
       result
 
     @tailrec def encode5(si: Int, di: Int): Array[Char] =
-      if (si <= sl5)
+      if si <= sl5 then
         val octa = baa.quadByteBigEndian(bytes, si).toLong << 32 | (bytes(si + 4) & 0xFFL) << 24
         result(di + 0) = alphabetChars((octa << 0 >>> 59).toInt)
         result(di + 1) = alphabetChars((octa << 5 >>> 59).toInt)
@@ -87,14 +87,14 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
         result(di + 6) = alphabetChars((octa << 30 >>> 59).toInt)
         result(di + 7) = alphabetChars((octa << 35 >>> 59).toInt)
         encode5(si + 5, di + 8)
-      else if (si < sl) encodeRest(si, di)
+      else if si < sl then encodeRest(si, di)
       else result
 
     encode5(0, 0)
 
   def decode(chars: Array[Char]): Array[Byte] =
     val sl = chars.length
-    if (sl > 0)
+    if sl > 0 then
       def failIllegalLength() =
         throw new IllegalArgumentException(
           s"Illegal Encoding: The given char array has a length that is not evenly divisible by 8 ($sl).")
@@ -103,7 +103,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
         throw new IllegalArgumentException(
           s"Illegal Padding: The given encoding has a padding that doesn't conform to the $name spec.")
 
-      if ((sl & 7) != 0) failIllegalLength()
+      if (sl & 7) != 0 then failIllegalLength()
 
       val baa = ByteArrayAccess.instance
       val sl8 = sl - 8
@@ -115,9 +115,9 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
         def fail() =
           throw new IllegalArgumentException(s""""${Util
             .show(chars)}" is not a valid $name encoding. '$c' at index $ix is not part of the $name alphabet.""")
-        if (c > 127) fail()
+        if c > 127 then fail()
         val b = lookup(c.toInt)
-        if (b < 0) fail()
+        if b < 0 then fail()
         b.toLong
 
       def decode8(result: Array[Byte], si: Int, di: Int): Unit =
@@ -132,7 +132,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
         (x << 2) + x // sl / 8 * 5
 
       val c1 = c(1)
-      if (c1 == 0x3D) // if we have at least one padding char
+      if c1 == 0x3D then // if we have at least one padding char
         val final6 = c(6) << 40 | c(5) << 32 | c(4) << 24 | c(3) << 16 | c(2) << 8 | c1
 
         // padding-length  ==> odd bytes
@@ -169,7 +169,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
           result
 
         @tailrec def rec(si: Int, di: Int): Array[Byte] =
-          if (si < sl8)
+          if si < sl8 then
             decode8(result, si, di)
             rec(si + 8, di + 5)
           else decodeRest(si, di)
@@ -179,7 +179,7 @@ final class Base32(name: String, alphabet: String) extends LookupBaseEncoding(na
         val result = new Array[Byte](baseLen)
 
         @tailrec def rec(si: Int, di: Int): Array[Byte] =
-          if (si < sl)
+          if si < sl then
             decode8(result, si, di)
             rec(si + 8, di + 5)
           else result

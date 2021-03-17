@@ -26,16 +26,16 @@ final private[borer] class CborRenderer(var out: Output) extends Renderer:
     out = out.writeAsByte(0xF7)
 
   def onBoolean(value: Boolean): Unit =
-    out = out.writeAsByte(if (value) 0xF5 else 0xF4)
+    out = out.writeAsByte(if value then 0xF5 else 0xF4)
 
   def onInt(value: Int): Unit =
     onLong(value.toLong)
 
   def onLong(value: Long): Unit =
-    out = if (value < 0) writeInteger(~value, 0x20) else writeInteger(value, 0x00)
+    out = if value < 0 then writeInteger(~value, 0x20) else writeInteger(value, 0x00)
 
   def onOverLong(negative: Boolean, value: Long): Unit =
-    out = out.writeAsByte(if (negative) 0x3B else 0x1B).writeLong(value)
+    out = out.writeAsByte(if negative then 0x3B else 0x1B).writeLong(value)
 
   def onFloat16(value: Float): Unit =
     out = out.writeAsByte(0xF9).writeShort(Float16.floatToShort(value).toShort)
@@ -59,7 +59,7 @@ final private[borer] class CborRenderer(var out: Output) extends Renderer:
     onText(value getBytes UTF_8)
 
   def onChars(buffer: Array[Char], length: Int): Unit =
-    onText(Utf8.encode(if (length == buffer.length) buffer else java.util.Arrays.copyOfRange(buffer, 0, length)))
+    onText(Utf8.encode(if length == buffer.length then buffer else java.util.Arrays.copyOfRange(buffer, 0, length)))
 
   def onText[Bytes](value: Bytes)(implicit byteAccess: ByteAccess[Bytes]): Unit =
     out = writeInteger(byteAccess.sizeOf(value), 0x60).writeBytes(value)
@@ -86,7 +86,7 @@ final private[borer] class CborRenderer(var out: Output) extends Renderer:
     out = writeInteger(value.code, 0xC0)
 
   def onSimpleValue(value: Int): Unit =
-    out = if (!SimpleValue.isLegal(value))
+    out = if !SimpleValue.isLegal(value) then
       val msg = s"$value must be in the range ${SimpleValue.legalRange}, but was $value"
       throw new Borer.Error.InvalidInputData(out, msg)
     else writeInteger(value.toLong, 0xE0)
@@ -95,10 +95,10 @@ final private[borer] class CborRenderer(var out: Output) extends Renderer:
 
   private def writeInteger(value: Long, majorType: Int): Output =
     var v = value
-    (if (v > 23) {
-       if (v >> 8 != 0) {
-         (if (v >> 16 != 0) {
-            (if (v >> 32 != 0) {
+    (if v > 23 then {
+       if v >> 8 != 0 then {
+         (if v >> 16 != 0 then {
+            (if v >> 32 != 0 then {
                out
                  .writeAsByte(0x1B + majorType)
                  .writeInt((v >> 32).toInt)

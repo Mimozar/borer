@@ -28,7 +28,7 @@ object NullOptions:
 
   implicit def decoder[T: Decoder]: Decoder[Option[T]] =
     Decoder { r =>
-      if (r.tryReadNull()) None
+      if r.tryReadNull() then None
       else Some(r.read[T]())
     }
 //#docs-quote-delimiter

@@ -35,7 +35,7 @@ trait FromByteArrayInput:
       byteArray(c)
 
     def readBytePadded(pp: Input.PaddingProvider[Array[Byte]]): Byte =
-      if (_cursor >= byteArray.length) pp.padByte() else readByte()
+      if _cursor >= byteArray.length then pp.padByte() else readByte()
 
     def readDoubleByteBigEndian(): Char =
       val c = _cursor
@@ -44,7 +44,7 @@ trait FromByteArrayInput:
 
     def readDoubleByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Char =
       val remaining = byteArray.length - _cursor
-      if (remaining >= 2) readDoubleByteBigEndian()
+      if remaining >= 2 then readDoubleByteBigEndian()
       else pp.padDoubleByte(remaining)
 
     def readQuadByteBigEndian(): Int =
@@ -54,7 +54,7 @@ trait FromByteArrayInput:
 
     def readQuadByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Int =
       val remaining = byteArray.length - _cursor
-      if (remaining >= 4) readQuadByteBigEndian()
+      if remaining >= 4 then readQuadByteBigEndian()
       else pp.padQuadByte(remaining)
 
     def readOctaByteBigEndian(): Long =
@@ -64,19 +64,19 @@ trait FromByteArrayInput:
 
     def readOctaByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Long =
       val remaining = byteArray.length - _cursor
-      if (remaining >= 8) readOctaByteBigEndian()
+      if remaining >= 8 then readOctaByteBigEndian()
       else pp.padOctaByte(remaining)
 
     def readBytes(length: Long, pp: Input.PaddingProvider[Array[Byte]]): Array[Byte] =
       val remaining = (byteArray.length - _cursor).toLong
       val len       = math.min(remaining, length).toInt
       val bytes =
-        if (len > 0)
+        if len > 0 then
           val result = new Array[Byte](len)
           val c      = _cursor
           _cursor = c + len
           System.arraycopy(byteArray, c, result, 0, len)
           result
         else Array.emptyByteArray
-      if (length <= remaining) bytes
+      if length <= remaining then bytes
       else pp.padBytes(bytes, length - remaining)

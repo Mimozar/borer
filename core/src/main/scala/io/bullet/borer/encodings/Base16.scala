@@ -18,13 +18,13 @@ object Base16 extends BaseEncoding("base16", 4):
 
   def encode(bytes: Array[Byte], upperCase: Boolean): Array[Char] =
     val sl        = bytes.length
-    val digitBase = if (upperCase) 7 else 39
+    val digitBase = if upperCase then 7 else 39
 
     def failOverflow() =
       throw new IllegalArgumentException(
         s"Overflow: Cannot $name-encode a byte array with size > 1.073.741.824 (was: $sl")
 
-    if (sl > Int.MaxValue / 2) failOverflow()
+    if sl > Int.MaxValue / 2 then failOverflow()
 
     val result = new Array[Char](sl << 1)
     val baa    = ByteArrayAccess.instance
@@ -33,7 +33,7 @@ object Base16 extends BaseEncoding("base16", 4):
     @inline def hexDigit(i: Int) = (48 + i + (digitBase & ((9 - i) >> 31))).toChar
 
     @tailrec def encodeSlow(si: Int, di: Int): Array[Char] =
-      if (si < sl)
+      if si < sl then
         val b = bytes(si)
         result(di + 0) = hexDigit(b << 24 >>> 28)
         result(di + 1) = hexDigit(b & 0x0F)
@@ -41,7 +41,7 @@ object Base16 extends BaseEncoding("base16", 4):
       else result
 
     @tailrec def encodeFast(si: Int, di: Int): Array[Char] =
-      if (si < sl4)
+      if si < sl4 then
         val quad = baa.quadByteBigEndian(bytes, si)
         result(di + 0) = hexDigit(quad << 0 >>> 28)
         result(di + 1) = hexDigit(quad << 4 >>> 28)
@@ -62,7 +62,7 @@ object Base16 extends BaseEncoding("base16", 4):
     def failIllegalEncoding() =
       throw new IllegalArgumentException(s"Illegal Encoding: The given char array has an odd length ($sl).")
 
-    if ((sl & 1) != 0) failIllegalEncoding()
+    if (sl & 1) != 0 then failIllegalEncoding()
 
     val result = new Array[Byte](sl >> 1)
     val sl8    = sl - 8
@@ -73,17 +73,17 @@ object Base16 extends BaseEncoding("base16", 4):
         throw new IllegalArgumentException(s""""${Util.show(chars)}" is not a valid $name encoding.
                                               | '$c' at index $ix is not part of the $name alphabet.""".stripMargin)
       val cc = c - 48
-      if (c < 0 || 102 < c || (((0x7E0000007E03FFL >> cc) & 1) == 0)) fail()
+      if c < 0 || 102 < c || (((0x7E0000007E03FFL >> cc) & 1) == 0) then fail()
       (c & 0x1F) + ((c >> 6) * 0x19) - 0x10
 
     @tailrec def decodeSlow(si: Int, di: Int): Array[Byte] =
-      if (si < sl)
+      if si < sl then
         result(di) = (d(si) << 4 | d(si + 1)).toByte
         decodeSlow(si + 2, di + 1)
       else result
 
     @tailrec def decodeFast(si: Int, di: Int): Array[Byte] =
-      if (si <= sl8)
+      if si <= sl8 then
         result(di + 0) = (d(si + 0) << 4 | d(si + 1)).toByte
         result(di + 1) = (d(si + 2) << 4 | d(si + 3)).toByte
         result(di + 2) = (d(si + 4) << 4 | d(si + 5)).toByte

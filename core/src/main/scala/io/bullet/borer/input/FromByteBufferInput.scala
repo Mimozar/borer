@@ -32,38 +32,38 @@ trait FromByteBufferInput:
     def readByte(): Byte = buffer.get()
 
     def readBytePadded(pp: Input.PaddingProvider[Array[Byte]]): Byte =
-      if (buffer.hasRemaining) readByte()
+      if buffer.hasRemaining then readByte()
       else pp.padByte()
 
     def readDoubleByteBigEndian(): Char = buffer.getChar
 
     def readDoubleByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Char =
       val remaining = buffer.remaining
-      if (remaining >= 2) readDoubleByteBigEndian()
+      if remaining >= 2 then readDoubleByteBigEndian()
       else pp.padDoubleByte(remaining)
 
     def readQuadByteBigEndian(): Int = buffer.getInt()
 
     def readQuadByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Int =
       val remaining = buffer.remaining
-      if (remaining >= 4) readQuadByteBigEndian()
+      if remaining >= 4 then readQuadByteBigEndian()
       else pp.padQuadByte(remaining)
 
     def readOctaByteBigEndian(): Long = buffer.getLong()
 
     def readOctaByteBigEndianPadded(pp: Input.PaddingProvider[Array[Byte]]): Long =
       val remaining = buffer.remaining
-      if (remaining >= 8) readOctaByteBigEndian()
+      if remaining >= 8 then readOctaByteBigEndian()
       else pp.padOctaByte(remaining)
 
     def readBytes(length: Long, pp: Input.PaddingProvider[Array[Byte]]): Array[Byte] =
       val remaining = buffer.remaining.toLong
       val len       = math.min(remaining, length).toInt
       val bytes =
-        if (len > 0)
+        if len > 0 then
           val bytes = new Array[Byte](len)
           buffer.get(bytes, 0, len)
           bytes
         else ByteAccess.ForByteArray.empty
-      if (length <= remaining) bytes
+      if length <= remaining then bytes
       else pp.padBytes(bytes, length - remaining)

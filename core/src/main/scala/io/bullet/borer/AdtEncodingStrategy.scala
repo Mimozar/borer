@@ -54,17 +54,17 @@ object AdtEncodingStrategy:
   implicit object Default extends AdtEncodingStrategy:
 
     def writeAdtEnvelopeOpen(w: Writer, typeName: String): w.type =
-      if (w.writingJson) w.writeMapStart()
+      if w.writingJson then w.writeMapStart()
       else w.writeMapHeader(1)
 
     def writeAdtEnvelopeClose(w: Writer, typeName: String): w.type =
-      if (w.writingJson) w.writeBreak() else w
+      if w.writingJson then w.writeBreak() else w
 
     def readAdtEnvelopeOpen(r: Reader, typeName: String) =
       def fail() = r.unexpectedDataItem(s"Single-entry Map for decoding an instance of type `$typeName`")
-      if (r.tryReadMapStart())
+      if r.tryReadMapStart() then
         true
-      else if (r.tryReadMapHeader(1))
+      else if r.tryReadMapHeader(1) then
         false
       else fail()
 
@@ -73,7 +73,7 @@ object AdtEncodingStrategy:
         r.unexpectedDataItem(
           s"Single-entry Map for decoding an instance of type `$typeName`",
           "at least one extra element")
-      if (openResult && !r.tryReadBreak()) fail()
+      if openResult && !r.tryReadBreak() then fail()
 
   /**
     * Alternative ADT encoding strategy, which writes the type ID as an extra map member.
@@ -107,7 +107,7 @@ object AdtEncodingStrategy:
     */
   def flat(typeMemberName: String = "_type", maxBufferSize: Int = 1024 * 1024): AdtEncodingStrategy =
     new AdtEncodingStrategy {
-      if (!Util.isPowerOf2(maxBufferSize))
+      if !Util.isPowerOf2(maxBufferSize) then
         throw new IllegalArgumentException(s"maxBufferSize must be a power of 2 but was $maxBufferSize")
 
       private lazy val typeMemberNameBytes = typeMemberName.getBytes(StandardCharsets.UTF_8)
@@ -120,19 +120,19 @@ object AdtEncodingStrategy:
           private var state: Int           = _ // 0 = initial, 1 = int type ID, 2 = long type ID, 3 = string type ID
 
           override def onInt(value: Int): Unit =
-            if (state == 0)
+            if state == 0 then
               longTypeId = value.toLong
               state = 1
             else default(s"the Int `$value`")
 
           override def onLong(value: Long): Unit =
-            if (state == 0)
+            if state == 0 then
               longTypeId = value
               state = 2
             else default(s"the Long `$value`")
 
           override def onString(value: String): Unit =
-            if (state == 0)
+            if state == 0 then
               stringTypeId = value
               state = 3
             else default("a String")
@@ -177,14 +177,14 @@ object AdtEncodingStrategy:
         val stash = new ElementDeque(maxBufferSize, r.stash)
 
         @tailrec def rec(remaining: Long, mapSize: Long): Boolean =
-          if (remaining != 0)
+          if remaining != 0 then
             def finish(): Boolean =
               // We have just read (and dropped) the typeMemberName element, the next element coming in from the parser
               // is the actual type id. Before letting the user code consume the stash we inject the artifical elements
               // making up the "regular" ADT envelope at the _beginning_ of the stash, in reverse order.
               val unsized = mapSize < 0
               // the start of ADT value
-              if (unsized) stash.prependReceiver.onMapStart() else stash.prependReceiver.onMapHeader(mapSize - 1)
+              if unsized then stash.prependReceiver.onMapStart() else stash.prependReceiver.onMapHeader(mapSize - 1)
               r.receiveInto(stash.prependReceiver) // the type id
               r.stash = stash                      // inject all our stashed elements before the next element from the parser
               unsized
@@ -206,9 +206,9 @@ object AdtEncodingStrategy:
                 rec(remaining - 1, mapSize) // and recurse
           else failNoTypeId()
 
-        if (r.tryReadMapStart())
+        if r.tryReadMapStart() then
           rec(-1, -1)
-        else if (r.hasMapHeader)
+        else if r.hasMapHeader then
           val mapSize = r.readMapHeader()
           rec(mapSize, mapSize)
         else failNoMap()

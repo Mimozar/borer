@@ -89,7 +89,7 @@ object Logging:
     def onBool(value: Boolean): Unit                     = show(value.toString)
     def onInt(value: Int): Unit                          = show(value.toString)
     def onLong(value: Long): Unit                        = show(s"${value}L")
-    def onOverLong(negative: Boolean, value: Long): Unit = show((if (negative) "-0x" else "0x") + toHexString(value))
+    def onOverLong(negative: Boolean, value: Long): Unit = show((if negative then "-0x" else "0x") + toHexString(value))
     def onFloat16(value: Float): Unit                    = show(s"${Util.doubleToString(value.toDouble)}f16")
     def onFloat(value: Float): Unit                      = show(s"${Util.doubleToString(value.toDouble)}f")
     def onDouble(value: Double): Unit                    = show(Util.doubleToString(value))
@@ -101,15 +101,15 @@ object Logging:
     def onChars(buffer: Array[Char], length: Int): Unit  = show(formatString(new String(buffer, 0, length)))
     def onText[Bytes: ByteAccess](value: Bytes): Unit    = show(formatString(value))
     def onTextStart(): Unit                              = show("TEXT-STREAM[")
-    def onArrayHeader(length: Long): Unit                = show(if (length > 0) "[" else "[]")
+    def onArrayHeader(length: Long): Unit                = show(if length > 0 then "[" else "[]")
     def onArrayStart(): Unit                             = show("[")
-    def onMapHeader(length: Long): Unit                  = show(if (length > 0) "{" else "{}")
+    def onMapHeader(length: Long): Unit                  = show(if length > 0 then "{" else "{}")
     def onMapStart(): Unit                               = show("{")
     def onTag(value: Tag): Unit                          = show(value.toString)
     def onSimpleValue(value: Int): Unit                  = show(s"SimpleValue($value)")
 
     def onLevelExited(levelType: LevelType, break: Boolean): Unit =
-      show(if (levelType.isInstanceOf[LevelType.MapEntry]) "}" else "]")
+      show(if levelType.isInstanceOf[LevelType.MapEntry] then "}" else "]")
 
     def onEndOfInput(): Unit = show("END")
 
@@ -117,13 +117,13 @@ object Logging:
       ba.toByteArray(value)
         .take(maxShownByteArrayPrefixLen)
         .map(x => f"${x & 0xFF}%02X")
-        .mkString(opener, " ", if (ba.sizeOf(value) > maxShownByteArrayPrefixLen) " ...]" else "]")
+        .mkString(opener, " ", if ba.sizeOf(value) > maxShownByteArrayPrefixLen then " ...]" else "]")
 
     def formatString[Bytes](value: Bytes)(implicit ba: ByteAccess[Bytes]): String =
       formatString(new String(ba.toByteArray(value), UTF_8))
 
     def formatString(value: String): String =
-      if (value.length > maxShownStringPrefixLen)
+      if value.length > maxShownStringPrefixLen then
         "\"" + value.substring(0, maxShownStringPrefixLen) + "...\""
       else "\"" + value + '"'
 
@@ -132,25 +132,25 @@ object Logging:
       val levelType       = inf.levelType
       val sze             = inf.levelSize
       val cnt             = inf.levelCount
-      val maxShownInLevel = if (levelType.isInstanceOf[LevelType.MapEntry]) maxShownMapEntries else maxShownArrayElems
+      val maxShownInLevel = if levelType.isInstanceOf[LevelType.MapEntry] then maxShownMapEntries else maxShownArrayElems
       val shownHalf       = maxShownInLevel >> 1
       val ellipsisCount   = sze - shownHalf
-      if (sze <= maxShownInLevel || cnt <= shownHalf + (maxShownInLevel & 1) || cnt > ellipsisCount)
+      if sze <= maxShownInLevel || cnt <= shownHalf + (maxShownInLevel & 1) || cnt > ellipsisCount then
         val sb = new java.lang.StringBuilder
-        for (_ <- 0 until inf.level) sb.append("    ")
+        for _ <- 0 until inf.level do sb.append("    ")
         val levelCount = cnt.toString
-        if (sze >= 0)
+        if sze >= 0 then
           val s = sze.toString
-          for (_ <- 0 until (s.length - levelCount.length)) sb.append(' ')
+          for _ <- 0 until (s.length - levelCount.length) do sb.append(' ')
           sb.append(levelCount).append('/').append(s)
         else sb.append(levelCount)
         sb.append(": ")
-        if (levelType == LevelType.MapValue && item != "]" && item != "}") sb.append("-> ")
+        if levelType == LevelType.MapValue && item != "]" && item != "}" then sb.append("-> ")
         sb.append(item)
         showLine(sb.toString)
-      else if (cnt == ellipsisCount && levelType != LevelType.MapKey)
+      else if cnt == ellipsisCount && levelType != LevelType.MapKey then
         val sb = new java.lang.StringBuilder
-        for (_ <- 0 until inf.level) sb.append("    ")
+        for _ <- 0 until inf.level do sb.append("    ")
         sb.append("...")
         showLine(sb.toString)
 
@@ -233,41 +233,41 @@ object Logging:
     def level = _level
 
     def levelCount =
-      if (_level >= 0)
+      if _level >= 0 then
         val count = _levelCount(_level)
         val size  = _levelSize(_level)
-        val rawCount = if (count >= 0)
-          if (size >= 0) count // bounded array
+        val rawCount = if count >= 0 then
+          if size >= 0 then count // bounded array
           else count >> 1      // bounded map
         else
-          if (size == 1) ~count >> 1 // unbounded map
+          if size == 1 then ~count >> 1 // unbounded map
           else ~count                // unbounded array, bytes or text
         rawCount + 1
       else 0
 
     def levelSize =
-      if (_level >= 0)
+      if _level >= 0 then
         val count = _levelCount(_level)
-        if (count >= 0)
+        if count >= 0 then
           val size = _levelSize(_level)
-          if (size >= 0) size // bounded array
+          if size >= 0 then size // bounded array
           else ~size >> 1     // bounded map
         else -1             // unbounded something
       else -1
 
     @nowarn("cat=other-match-analysis")
     def levelType =
-      if (_level >= 0)
+      if _level >= 0 then
         val count = _levelCount(_level)
         val size  = _levelSize(_level)
-        if (count >= 0)
-          if (size >= 0) LevelType.Array
-          else if ((count & 1) == 0) LevelType.MapKey
+        if count >= 0 then
+          if size >= 0 then LevelType.Array
+          else if (count & 1) == 0 then LevelType.MapKey
           else LevelType.MapValue
         else
           size match
             case 0 => LevelType.Array
-            case 1 => if ((count & 1) != 0) LevelType.MapKey else LevelType.MapValue
+            case 1 => if (count & 1) != 0 then LevelType.MapKey else LevelType.MapValue
             case 2 => LevelType.UnboundedByteString
             case 3 => LevelType.UnboundedTextString
       else LevelType.Array
@@ -354,7 +354,7 @@ object Logging:
 
     def onArrayHeader(length: Long): Unit =
       logger.onArrayHeader(length)
-      if (length > 0) enterLevel(count = 0, size = length) else count()
+      if length > 0 then enterLevel(count = 0, size = length) else count()
       target.onArrayHeader(length)
 
     def onArrayStart(): Unit =
@@ -364,7 +364,7 @@ object Logging:
 
     def onMapHeader(length: Long): Unit =
       logger.onMapHeader(length)
-      if (length > 0) enterLevel(count = 0, size = ~(length << 1)) else count()
+      if length > 0 then enterLevel(count = 0, size = ~(length << 1)) else count()
       target.onMapHeader(length)
 
     def onMapStart(): Unit =
@@ -393,14 +393,14 @@ object Logging:
       target.onEndOfInput()
 
     @tailrec private def count(): Unit =
-      if (_level >= 0)
+      if _level >= 0 then
         val cnt = _levelCount(_level)
-        if (cnt >= 0)
+        if cnt >= 0 then
           // bounded array or map
           val newCount = cnt + 1
           val rawSize  = _levelSize(_level)
-          val size     = if (rawSize >= 0) rawSize else ~rawSize
-          if (newCount == size)
+          val size     = if rawSize >= 0 then rawSize else ~rawSize
+          if newCount == size then
             val exitedLevelType = levelType
             exitLevel()
             logger.onLevelExited(exitedLevelType, break = false)
@@ -410,9 +410,9 @@ object Logging:
 
     private def enterLevel(count: Long, size: Long): Unit =
       val newLevel = _level + 1
-      if (newLevel == _levelCount.length)
+      if newLevel == _levelCount.length then
         val l2     = newLevel << 1
-        val newLen = if (l2 >= 0) l2 else Int.MaxValue // overflow protection
+        val newLen = if l2 >= 0 then l2 else Int.MaxValue // overflow protection
         _levelCount = util.Arrays.copyOf(_levelCount, newLen)
         _levelSize = util.Arrays.copyOf(_levelSize, newLen)
       _level = newLevel

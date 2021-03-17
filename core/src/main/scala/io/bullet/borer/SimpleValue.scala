@@ -14,7 +14,7 @@ package io.bullet.borer
   * @param value the value's code
   */
 final case class SimpleValue(value: Int):
-  if (!SimpleValue.isLegal(value))
+  if !SimpleValue.isLegal(value) then
     throw new IllegalArgumentException(s"`value` must be in the range ${SimpleValue.legalRange}, but was $value")
 
 object SimpleValue:

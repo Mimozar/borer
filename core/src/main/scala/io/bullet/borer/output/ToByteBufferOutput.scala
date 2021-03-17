@@ -36,17 +36,17 @@ trait ToByteBufferOutput:
     type Result = ByteBuffer
 
     @inline def size: Long =
-      if (currentChunkBuffer ne null) fullChunksSize + currentChunkBuffer.position().toLong else 0L
+      if currentChunkBuffer ne null then fullChunksSize + currentChunkBuffer.position().toLong else 0L
 
     def writeByte(byte: Byte): this.type =
       ensureBufferAllocated()
-      if (!currentChunkBuffer.hasRemaining) appendChunk()
+      if !currentChunkBuffer.hasRemaining then appendChunk()
       currentChunkBuffer.put(byte)
       this
 
     def writeBytes(a: Byte, b: Byte): this.type =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 2)
+      if currentChunkBuffer.remaining >= 2 then
         currentChunkBuffer.put(a)
         currentChunkBuffer.put(b)
         this
@@ -54,14 +54,14 @@ trait ToByteBufferOutput:
 
     override def writeShort(value: Short): this.type =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 2)
+      if currentChunkBuffer.remaining >= 2 then
         currentChunkBuffer.putShort(value)
         this
       else writeByte((value >> 8).toByte).writeByte(value.toByte)
 
     def writeBytes(a: Byte, b: Byte, c: Byte): this.type =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 3)
+      if currentChunkBuffer.remaining >= 3 then
         currentChunkBuffer.put(a)
         currentChunkBuffer.put(b)
         currentChunkBuffer.put(c)
@@ -70,7 +70,7 @@ trait ToByteBufferOutput:
 
     def writeBytes(a: Byte, b: Byte, c: Byte, d: Byte): this.type =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 4)
+      if currentChunkBuffer.remaining >= 4 then
         currentChunkBuffer.put(a)
         currentChunkBuffer.put(b)
         currentChunkBuffer.put(c)
@@ -80,14 +80,14 @@ trait ToByteBufferOutput:
 
     override def writeInt(value: Int) =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 4)
+      if currentChunkBuffer.remaining >= 4 then
         currentChunkBuffer.putInt(value)
         this
       else writeShort((value >> 16).toShort).writeShort(value.toShort)
 
     override def writeLong(value: Long) =
       ensureBufferAllocated()
-      if (currentChunkBuffer.remaining >= 8)
+      if currentChunkBuffer.remaining >= 8 then
         currentChunkBuffer.putLong(value)
         this
       else writeInt((value >> 32).toInt).writeInt(value.toInt)
@@ -95,7 +95,7 @@ trait ToByteBufferOutput:
     def writeBytes[Bytes](bytes: Bytes)(implicit byteAccess: ByteAccess[Bytes]): this.type =
       @tailrec def rec(rest: Bytes): this.type =
         val newRest = byteAccess.copyToByteBuffer(rest, currentChunkBuffer)
-        if (!byteAccess.isEmpty(newRest))
+        if !byteAccess.isEmpty(newRest) then
           appendChunk()
           rec(newRest)
         else this
@@ -106,27 +106,27 @@ trait ToByteBufferOutput:
       ensureBufferAllocated()
       val longSize = size
       val intSize  = longSize.toInt
-      if (intSize != longSize)
+      if intSize != longSize then
         throw new Borer.Error.Overflow(this, f"Output size of $longSize%,d bytes too large for ByteBuffer")
       val buf = ByteBuffer.allocate(intSize)
 
       @tailrec def rec(chunk: Chunk): ByteBuffer =
-        if (chunk ne null)
+        if chunk ne null then
           buf.put(chunk.buffer.flip().asInstanceOf[ByteBuffer])
           rec(chunk.next)
         else
-          if (allowBufferCaching) ByteBufferCache.release(currentChunkBuffer)
+          if allowBufferCaching then ByteBufferCache.release(currentChunkBuffer)
           currentChunkBuffer = null
           buf.flip().asInstanceOf[ByteBuffer]
 
       rec(rootChunk)
 
     @inline private def ensureBufferAllocated(): Unit =
-      if (currentChunkBuffer eq null) allocateBuffer()
+      if currentChunkBuffer eq null then allocateBuffer()
 
     private def allocateBuffer(): Unit =
       currentChunkBuffer =
-        if (allowBufferCaching) ByteBufferCache.acquire(bufferSize) else ByteBuffer.allocate(bufferSize)
+        if allowBufferCaching then ByteBufferCache.acquire(bufferSize) else ByteBuffer.allocate(bufferSize)
       rootChunk = new Chunk(currentChunkBuffer, next = null)
       currentChunk = rootChunk
       fullChunksSize = 0L

@@ -18,8 +18,8 @@ package io.bullet.borer.internal
   */
 final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val maxCapacity: Int):
   // automatically implies maxCapacity <= 0x40000000
-  if (!Util.isPowerOf2(maxCapacity) || maxCapacity <= 0 || !Util.isPowerOf2(
-      initialCapacity) || initialCapacity <= 0 || maxCapacity < initialCapacity)
+  if !Util.isPowerOf2(maxCapacity) || maxCapacity <= 0 || !Util.isPowerOf2(
+      initialCapacity) || initialCapacity <= 0 || maxCapacity < initialCapacity then
     throw new IllegalArgumentException
 
   private[this] var array = new Array[Byte](initialCapacity)
@@ -57,84 +57,84 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
   @inline def currentCapacity: Int = array.length
 
   def append1(value: Byte): Boolean =
-    if (count < currentCapacity)
+    if count < currentCapacity then
       val ix = writeIx
       writeIx = ix + 1
       write1(value, ix)
     else grow() && append1(value)
 
   def prepend1(value: Byte): Boolean =
-    if (count < currentCapacity)
+    if count < currentCapacity then
       val ix = readIx - 1
       readIx = ix
       write1(value, ix)
     else grow() && prepend1(value)
 
   def append2(a: Byte, b: Byte): Boolean =
-    if (count <= currentCapacity - 2)
+    if count <= currentCapacity - 2 then
       val ix = writeIx
       writeIx = ix + 2
       write2(a, b, ix)
     else grow() && append2(a, b)
 
   def prepend2(a: Byte, b: Byte): Boolean =
-    if (count <= currentCapacity - 2)
+    if count <= currentCapacity - 2 then
       val ix = readIx - 2
       readIx = ix
       write2(a, b, ix)
     else grow() && prepend2(a, b)
 
   def append4(value: Int): Boolean =
-    if (count <= currentCapacity - 4)
+    if count <= currentCapacity - 4 then
       val ix = writeIx
       writeIx = ix + 4
       write4(value, ix)
     else grow() && append4(value)
 
   def prepend4(value: Int): Boolean =
-    if (count <= currentCapacity - 4)
+    if count <= currentCapacity - 4 then
       val ix = readIx - 4
       readIx = ix
       write4(value, ix)
     else grow() && prepend4(value)
 
   def append5(byte: Byte, int: Int): Boolean =
-    if (count <= currentCapacity - 5)
+    if count <= currentCapacity - 5 then
       val ix = writeIx
       writeIx = ix + 5
       write5(byte, int, ix)
     else grow() && append5(byte, int)
 
   def prepend5(byte: Byte, int: Int): Boolean =
-    if (count <= currentCapacity - 5)
+    if count <= currentCapacity - 5 then
       val ix = readIx - 5
       readIx = ix
       write5(byte, int, ix)
     else grow() && prepend5(byte, int)
 
   def append8(value: Long): Boolean =
-    if (count <= currentCapacity - 8)
+    if count <= currentCapacity - 8 then
       val ix = writeIx
       writeIx = ix + 8
       write8(value, ix)
     else grow() && append8(value)
 
   def prepend8(value: Long): Boolean =
-    if (count <= currentCapacity - 8)
+    if count <= currentCapacity - 8 then
       val ix = readIx - 8
       readIx = ix
       write8(value, ix)
     else grow() && prepend8(value)
 
   def append9(byte: Byte, long: Long): Boolean =
-    if (count < currentCapacity - 8)
+    if count < currentCapacity - 8 then
       val ix = writeIx
       writeIx = ix + 9
       write9(byte, long, ix)
     else grow() && append9(byte, long)
 
   def prepend9(byte: Byte, long: Long): Boolean =
-    if (count < currentCapacity - 8)
+    if count < currentCapacity - 8 then
       val ix = readIx - 9
       readIx = ix
       write9(byte, long, ix)
@@ -151,7 +151,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
 
   private def write4(value: Int, ix: Int): Boolean =
     val masked = ix & mask
-    if (masked <= array.length - 4)
+    if masked <= array.length - 4 then
       ByteArrayAccess.instance.setQuadByteBigEndian(array, masked, value)
     else
       array(masked) = (value >> 24).toByte
@@ -163,7 +163,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
   private def write5(byte: Byte, int: Int, ix: Int): Boolean =
     array(ix & mask) = byte
     val masked = (ix + 1) & mask
-    if (masked <= array.length - 4)
+    if masked <= array.length - 4 then
       ByteArrayAccess.instance.setQuadByteBigEndian(array, masked, int)
     else
       array(masked) = (int >> 24).toByte
@@ -174,7 +174,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
 
   private def write8(value: Long, ix: Int): Boolean =
     val masked = ix & mask
-    if (masked <= array.length - 8)
+    if masked <= array.length - 8 then
       ByteArrayAccess.instance.setOctaByteBigEndian(array, masked, value)
     else
       array(masked) = (value >> 56).toByte
@@ -190,7 +190,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
   private def write9(byte: Byte, long: Long, ix: Int): Boolean =
     array(ix & mask) = byte
     val masked = (ix + 1) & mask
-    if (masked <= array.length - 8)
+    if masked <= array.length - 8 then
       ByteArrayAccess.instance.setOctaByteBigEndian(array, masked, long)
     else
       array(masked) = (long >> 56).toByte
@@ -208,7 +208,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
     * Throws a NoSuchElementException if the buffer is empty.
     */
   def readByte(): Byte =
-    if (nonEmpty) unsafeReadByte()
+    if nonEmpty then unsafeReadByte()
     else throw new NoSuchElementException
 
   /**
@@ -223,7 +223,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
     val r = readIx
     readIx = r + 4
     val ix = r & mask
-    if (ix <= array.length - 4)
+    if ix <= array.length - 4 then
       ByteArrayAccess.instance.quadByteBigEndian(array, ix)
     else
       (
@@ -237,7 +237,7 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
     val r = readIx
     readIx = r + 8
     val ix = r & mask
-    if (ix <= array.length - 8)
+    if ix <= array.length - 8 then
       ByteArrayAccess.instance.octaByteBigEndian(array, ix)
     else
       (
@@ -252,10 +252,10 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
       )
 
   def peekLastOctaByte(): Long =
-    if (count >= 8)
+    if count >= 8 then
       val w  = writeIx - 8
       val ix = w & mask
-      if (ix <= array.length - 8)
+      if ix <= array.length - 8 then
         ByteArrayAccess.instance.octaByteBigEndian(array, ix)
       else
         (
@@ -271,15 +271,15 @@ final private[borer] class ResizableByteRingBuffer(initialCapacity: Int, val max
     else throw new NoSuchElementException
 
   def patchLastOctaByte(value: Long): Unit =
-    if (count >= 8) write8(value, writeIx - 8)
+    if count >= 8 then write8(value, writeIx - 8)
     else throw new NoSuchElementException
 
   def dropNext(n: Int): Unit =
-    if (n <= count) readIx += n
+    if n <= count then readIx += n
     else throw new NoSuchElementException
 
   def dropLast(n: Int): Unit =
-    if (n <= count) writeIx -= n
+    if n <= count then writeIx -= n
     else throw new NoSuchElementException
 
   private def grow(): Boolean =

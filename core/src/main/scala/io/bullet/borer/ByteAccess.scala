@@ -88,7 +88,7 @@ object ByteAccess:
 
     def copyToByteArray(bytes: Array[Byte], byteArray: Array[Byte], startIndex: Int): Array[Byte] =
       val dstRemaining = byteArray.length - startIndex
-      if (bytes.length <= dstRemaining)
+      if bytes.length <= dstRemaining then
         System.arraycopy(bytes, 0, byteArray, startIndex, bytes.length)
         empty
       else
@@ -99,7 +99,7 @@ object ByteAccess:
 
     def copyToByteBuffer(bytes: Array[Byte], byteBuffer: ByteBuffer): Array[Byte] =
       val dstRemaining = byteBuffer.remaining()
-      if (bytes.length <= dstRemaining)
+      if bytes.length <= dstRemaining then
         byteBuffer.put(bytes)
         empty
       else
@@ -109,10 +109,10 @@ object ByteAccess:
         rest
 
     def concat(a: Array[Byte], b: Array[Byte]): Array[Byte] =
-      if (a.length > 0)
-        if (b.length > 0)
+      if a.length > 0 then
+        if b.length > 0 then
           val len = a.length + b.length
-          if (len >= 0)
+          if len >= 0 then
             val result = new Array[Byte](len)
             System.arraycopy(a, 0, result, 0, a.length)
             System.arraycopy(b, 0, result, a.length, b.length)
@@ -156,7 +156,7 @@ object ByteAccess:
     def copyToByteBuffer(bytes: ByteBuffer, byteBuffer: ByteBuffer): ByteBuffer =
       val srcRemaining = bytes.remaining
       val dstRemaining = byteBuffer.remaining
-      if (srcRemaining <= dstRemaining)
+      if srcRemaining <= dstRemaining then
         bytes.mark()
         byteBuffer.put(bytes)
         bytes.reset()
@@ -164,10 +164,10 @@ object ByteAccess:
       bytes
 
     def concat(a: ByteBuffer, b: ByteBuffer): ByteBuffer =
-      if (a.hasRemaining)
-        if (b.hasRemaining)
+      if a.hasRemaining then
+        if b.hasRemaining then
           val len = a.remaining + b.remaining
-          if (len >= 0)
+          if len >= 0 then
             val result = ByteBuffer.allocate(len)
             a.mark()
             result.put(a)

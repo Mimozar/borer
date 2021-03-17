@@ -28,8 +28,6 @@ lazy val commonSettings = Seq(
     "-feature",
     "-unchecked",
     "-explain",
-    "-explain-types",
-    "-language:implicitConversions",
     "-Xtarget:8",
     "-Xfatal-warnings",
   ),

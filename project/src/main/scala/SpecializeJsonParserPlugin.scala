@@ -29,7 +29,6 @@ object SpecializeJsonParserPlugin extends AutoPlugin {
       RewriteRule.DeleteFirst("import io.bullet.borer.internal.ByteArrayAccess"),
       RewriteRule.ReplaceFirst("import io.bullet.borer.{ByteAccess, Input}", "import io.bullet.borer.Input"),
       RewriteRule.DeleteSection("trait FromByteArrayInput", "final private class FromByteArray"),
-      RewriteRule.DeleteLast("}"),
       RewriteRule.ReplaceFirst("private class FromByteArray(byteArray: Array[Byte]",
         "private[borer] class DirectFromByteArrayInput(byteArray: Array[Byte], baa: io.bullet.borer.internal.Unsafe.LittleEndianByteArrayAccess"),
       RewriteRule.ReplaceAll("ByteArrayAccess.instance", "baa")

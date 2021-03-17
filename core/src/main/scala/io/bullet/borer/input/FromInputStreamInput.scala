@@ -24,7 +24,7 @@ trait FromInputStreamInput { this: FromByteArrayInput with FromIteratorInput =>
     FromInputStreamProvider.asInstanceOf[Input.Provider[T]]
 
   def fromInputStream(inputStream: InputStream, bufferSize: Int = 16384): Input[Array[Byte]] =
-    if (bufferSize < 256) throw new IllegalArgumentException(s"bufferSize must be >= 256 but was $bufferSize")
+    if bufferSize < 256 then throw new IllegalArgumentException(s"bufferSize must be >= 256 but was $bufferSize")
     val iterator: Iterator[Input[Array[Byte]]] =
       new Iterator[Input[Array[Byte]]] {
         private[this] val bufA                          = new Array[Byte](bufferSize)
@@ -34,7 +34,7 @@ trait FromInputStreamInput { this: FromByteArrayInput with FromIteratorInput =>
 
         def hasNext =
           def tryReadNext() =
-            val buf = if (bufSelect) bufA else bufB
+            val buf = if bufSelect then bufA else bufB
             nextInput = inputStream.read(buf) match
               case -1 => null
               case `bufferSize` =>
@@ -45,7 +45,7 @@ trait FromInputStreamInput { this: FromByteArrayInput with FromIteratorInput =>
           (nextInput ne null) || tryReadNext()
 
         def next() =
-          if (hasNext)
+          if hasNext then
             val result = nextInput
             nextInput = null
             result

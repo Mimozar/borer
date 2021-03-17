@@ -71,7 +71,7 @@ case object Cbor extends Target:
       maxNestingLevels: Int = 1000)
       extends Borer.EncodingConfig with CborValidation.Config:
 
-    if (bufferSize < 8) throw new IllegalArgumentException(s"bufferSize must be >= 8, but was $bufferSize")
+    if bufferSize < 8 then throw new IllegalArgumentException(s"bufferSize must be >= 8, but was $bufferSize")
 
   object EncodingConfig:
     val default = EncodingConfig()
@@ -101,7 +101,7 @@ case object Cbor extends Target:
     Util.requireNonNegative(maxMapLength, "maxMapLength")
     Util.requireNonNegative(maxNestingLevels, "maxNestingLevels")
 
-    if (maxMapLength > Long.MaxValue / 2)
+    if maxMapLength > Long.MaxValue / 2 then
       throw new IllegalArgumentException(s"maxMapLength must be <= ${Long.MaxValue / 2}, but was $maxMapLength")
 
   object DecodingConfig:
@@ -144,7 +144,7 @@ case object Json extends Target:
       receiverWrapper: Receiver.Wrapper[DecodingConfig] = Receiver.nopWrapper)(
       implicit p: Input.Provider[T]): Reader =
     val directParser = io.bullet.borer.json.DirectParser(value, config)
-    val parser       = if (directParser ne null) null else new JsonParser(p(value), config)(p.byteAccess)
+    val parser       = if directParser ne null then null else new JsonParser(p(value), config)(p.byteAccess)
     new InputReader(parser, directParser, receiverWrapper, config, Json)
 
   final case class EncodingConfig(
@@ -154,7 +154,7 @@ case object Json extends Target:
 
     def compressFloatingPointValues = false
 
-    if (bufferSize < 8) throw new IllegalArgumentException(s"bufferSize must be >= 8, but was $bufferSize")
+    if bufferSize < 8 then throw new IllegalArgumentException(s"bufferSize must be >= 8, but was $bufferSize")
 
   object EncodingConfig:
     val default = EncodingConfig()
@@ -190,7 +190,7 @@ case object Json extends Target:
     Util.requirePositive(maxStringLength, "maxStringLength")
     Util.requireRange(maxNumberMantissaDigits, 1, 200, "maxNumberMantissaDigits")
     Util.requirePositive(initialCharbufferSize, "initialCharbufferSize")
-    if (!Util.isPowerOf2(initialCharbufferSize))
+    if !Util.isPowerOf2(initialCharbufferSize) then
       throw new IllegalArgumentException(
         s"initialCharbufferSize must be a power of two, but was $initialCharbufferSize")
 
@@ -268,7 +268,7 @@ object Borer:
     final def withStackedWrapper(wrapper: Receiver.Wrapper[Config]): this.type =
       val prevWrapper = receiverWrapper
       receiverWrapper =
-        if (prevWrapper eq Receiver.nopWrapper[Config]) wrapper
+        if prevWrapper eq Receiver.nopWrapper[Config] then wrapper
         else (r: Receiver, conf: Config) => wrapper(prevWrapper(r, conf), conf)
       this
 
@@ -281,12 +281,12 @@ object Borer:
 
     private[borer] def withPosOf(reader: Reader): Error[Input.Position] =
       val thiz = this.asInstanceOf[Error[Input.Position]]
-      if (thiz._io.asInstanceOf[AnyRef] eq null) thiz._io = reader.position
+      if thiz._io.asInstanceOf[AnyRef] eq null then thiz._io = reader.position
       thiz
 
     private[borer] def withOut(out: Output): Error[Output] =
       val thiz = this.asInstanceOf[Error[Output]]
-      if (thiz._io eq null) thiz._io = out
+      if thiz._io eq null then thiz._io = out
       thiz
 
   object Error:

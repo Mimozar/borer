@@ -33,10 +33,10 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
   def pull(receiver: Receiver): Int =
 
     @inline def decodePositiveInteger(uLong: Long): Int =
-      if (Util.isUnsignedInt(uLong))
+      if Util.isUnsignedInt(uLong) then
         receiver.onInt(uLong.toInt)
         DataItem.Int
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onLong(uLong)
         DataItem.Long
       else
@@ -44,10 +44,10 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
         DataItem.OverLong
 
     @inline def decodeNegativeInteger(uLong: Long): Int =
-      if (Util.isUnsignedInt(uLong))
+      if Util.isUnsignedInt(uLong) then
         receiver.onInt((~uLong).toInt)
         DataItem.Int
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onLong(~uLong)
         DataItem.Long
       else
@@ -55,37 +55,37 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
         DataItem.OverLong
 
     @inline def decodeByteString(uLong: Long, indefiniteLength: Boolean): Int =
-      if (indefiniteLength)
+      if indefiniteLength then
         receiver.onBytesStart()
         DataItem.BytesStart
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onBytes(input.readBytes(uLong, this))
         DataItem.Bytes
       else failOverflow("This decoder does not support byte strings with size >= 2^63")
 
     @inline def decodeTextString(uLong: Long, indefiniteLength: Boolean): Int =
-      if (indefiniteLength)
+      if indefiniteLength then
         receiver.onTextStart()
         DataItem.TextStart
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onText(input.readBytes(uLong, this))
         DataItem.Text
       else failOverflow("This decoder does not support text strings with size >= 2^63")
 
     @inline def decodeArray(uLong: Long, indefiniteLength: Boolean): Int =
-      if (indefiniteLength)
+      if indefiniteLength then
         receiver.onArrayStart()
         DataItem.ArrayStart
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onArrayHeader(uLong)
         DataItem.ArrayHeader
       else failOverflow("This decoder does not support arrays with size >= 2^63")
 
     @inline def decodeMap(uLong: Long, indefiniteLength: Boolean): Int =
-      if (indefiniteLength)
+      if indefiniteLength then
         receiver.onMapStart()
         DataItem.MapStart
-      else if (Util.isUnsignedLong(uLong))
+      else if Util.isUnsignedLong(uLong) then
         receiver.onMapHeader(uLong)
         DataItem.MapHeader
       else failOverflow("This decoder does not support maps with size >= 2^63")
@@ -142,14 +142,14 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
           receiver.onBreak()
           DataItem.Break
         case x =>
-          if (SimpleValue.isLegal(x))
+          if SimpleValue.isLegal(x) then
             receiver.onSimpleValue(x)
             DataItem.SimpleValue
           else failUnsupported(s"CBOR major type 7 code $x is unsupported by this decoder")
 
     _valueIndex = -1
     val byte = input.readBytePadded(this)
-    if (_valueIndex < 0)
+    if _valueIndex < 0 then
       _valueIndex = input.cursor - 1
       val majorType = byte << 24 >>> 29
       val info      = byte & 0x1F
@@ -163,7 +163,7 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
           case 26 => input.readQuadByteBigEndianPadded(this) & 0xFFFFFFFFL
           case 27 => input.readOctaByteBigEndianPadded(this)
           case _ =>
-            if (info == 31 && 2 <= majorType && majorType <= 5 || majorType == 7) 0L // handled specially
+            if info == 31 && 2 <= majorType && majorType <= 5 || majorType == 7 then 0L // handled specially
             else failInvalidInput(s"Additional info `$info` is invalid (major type `$majorType`)")
 
       (majorType: @switch) match
@@ -180,7 +180,7 @@ final private[borer] class CborParser[Bytes: ByteAccess](val input: Input[Bytes]
       DataItem.EndOfInput
 
   def padByte() =
-    if (_valueIndex < 0)
+    if _valueIndex < 0 then
       _valueIndex = 0
       0
     else failUnexpectedEOI("8-bit integer")

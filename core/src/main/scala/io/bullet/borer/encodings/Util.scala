@@ -11,4 +11,4 @@ package io.bullet.borer.encodings
 private object Util:
 
   def show(chars: Array[Char]): String =
-    if (chars.length <= 16) new String(chars) else new String(chars.take(16)) + "..."
+    if chars.length <= 16 then new String(chars) else new String(chars.take(16)) + "..."

@@ -40,7 +40,7 @@ final class InputReader[Config <: Reader.Config](
   private[borer] var stash: ElementDeque = _
 
   private[borer] def release(): Unit =
-    if (directParser eq null)
+    if directParser eq null then
       parser match
         case x: JsonParser[_] => x.release()
         case _                => //
@@ -48,15 +48,15 @@ final class InputReader[Config <: Reader.Config](
 
   @inline def dataItem(): Int =
     def pullFromStash() =
-      if (stash.isEmpty)
+      if stash.isEmpty then
         stash = stash.next
         dataItem()
       else stash.pull(receptacle)
 
-    if (_dataItem == DI.None)
+    if _dataItem == DI.None then
       _dataItem =
-        if (stash ne null) pullFromStash()
-        else if (directParser ne null) directParser.pull(receiver)
+        if stash ne null then pullFromStash()
+        else if directParser ne null then directParser.pull(receiver)
         else parser.pull(receiver)
     _dataItem
 
@@ -69,8 +69,8 @@ final class InputReader[Config <: Reader.Config](
   @inline def readingJson: Boolean = target eq Json
   @inline def readingCbor: Boolean = target eq Cbor
 
-  @inline def input: Input[_]          = if (directParser ne null) directParser.input else parser.input
-  @inline def cursor: Long             = if (directParser ne null) directParser.valueIndex else parser.valueIndex
+  @inline def input: Input[_]          = if directParser ne null then directParser.input else parser.input
+  @inline def cursor: Long             = if directParser ne null then directParser.valueIndex else parser.valueIndex
   @inline def position: Input.Position = input.position(cursor)
 
   /**
@@ -89,16 +89,16 @@ final class InputReader[Config <: Reader.Config](
 
   @inline def apply[T: Decoder]: T = read[T]()
 
-  def readNull(): Null               = if (hasNull) ret(null) else unexpectedDataItem(expected = "null")
+  def readNull(): Null               = if hasNull then ret(null) else unexpectedDataItem(expected = "null")
   @inline def hasNull: Boolean       = has(DI.Null)
   @inline def tryReadNull(): Boolean = clearIfTrue(hasNull)
 
-  def readUndefined(): this.type          = if (hasUndefined) ret(this) else unexpectedDataItem(expected = "undefined")
+  def readUndefined(): this.type          = if hasUndefined then ret(this) else unexpectedDataItem(expected = "undefined")
   @inline def hasUndefined: Boolean       = has(DI.Undefined)
   @inline def tryReadUndefined(): Boolean = clearIfTrue(hasUndefined)
 
   def readBoolean(): Boolean =
-    if (hasBoolean)
+    if hasBoolean then
       clearDataItem()
       receptacle.boolValue
     else unexpectedDataItem(expected = "Bool")
@@ -107,7 +107,7 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadBoolean(value: Boolean): Boolean = clearIfTrue(hasBoolean(value))
 
   def readChar(): Char =
-    if (hasChar)
+    if hasChar then
       clearDataItem()
       receptacle.intValue.toChar
     else unexpectedDataItem(expected = "Char")
@@ -116,7 +116,7 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadChar(value: Char): Boolean = clearIfTrue(hasChar(value))
 
   def readByte(): Byte =
-    if (hasByte)
+    if hasByte then
       clearDataItem()
       receptacle.intValue.toByte
     else unexpectedDataItem(expected = "Byte")
@@ -125,7 +125,7 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadByte(value: Byte): Boolean = clearIfTrue(hasByte(value))
 
   def readShort(): Short =
-    if (hasShort)
+    if hasShort then
       clearDataItem()
       receptacle.intValue.toShort
     else unexpectedDataItem(expected = "Short")
@@ -134,7 +134,7 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadShort(value: Short): Boolean = clearIfTrue(hasShort(value))
 
   def readInt(): Int =
-    if (hasInt)
+    if hasInt then
       clearDataItem()
       receptacle.intValue
     else unexpectedDataItem(expected = "Int")
@@ -143,8 +143,8 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadInt(value: Int): Boolean = clearIfTrue(hasInt(value))
 
   def readLong(): Long =
-    if (hasLong)
-      val result = if (hasInt) receptacle.intValue.toLong else receptacle.longValue
+    if hasLong then
+      val result = if hasInt then receptacle.intValue.toLong else receptacle.longValue
       clearDataItem()
       result
     else unexpectedDataItem(expected = "Long")
@@ -162,18 +162,18 @@ final class InputReader[Config <: Reader.Config](
     * - one if the next data item is a Long > `value`
     */
   def longCompare(value: Long): Int =
-    if (hasLong)
-      val long = if (hasInt) receptacle.intValue.toLong else receptacle.longValue
+    if hasLong then
+      val long = if hasInt then receptacle.intValue.toLong else receptacle.longValue
       math.signum(long - value).toInt
     else Int.MaxValue
 
   def tryReadLongCompare(value: Long): Int =
     val result = longCompare(value)
-    if (result == 0) clearDataItem()
+    if result == 0 then clearDataItem()
     result
 
   def readOverLong(): Long =
-    if (hasOverLong)
+    if hasOverLong then
       clearDataItem()
       receptacle.longValue
     else unexpectedDataItem(expected = "OverLong")
@@ -182,10 +182,10 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadOverLong(value: Long): Boolean = clearIfTrue(hasOverLong(value))
 
   @inline def overLongNegative: Boolean =
-    if (hasOverLong) receptacle.boolValue else unexpectedDataItem(expected = "OverLong")
+    if hasOverLong then receptacle.boolValue else unexpectedDataItem(expected = "OverLong")
 
   def readFloat16(): Float =
-    if (hasFloat16)
+    if hasFloat16 then
       clearDataItem()
       receptacle.floatValue
     else unexpectedDataItem(expected = "Float16")
@@ -229,7 +229,7 @@ final class InputReader[Config <: Reader.Config](
   @inline def tryReadDouble(value: Double): Boolean = clearIfTrue(hasDouble(value))
 
   def readNumberString(): String =
-    if (hasNumberString) ret(receptacle.stringValue)
+    if hasNumberString then ret(receptacle.stringValue)
     else unexpectedDataItem(expected = "NumberString")
   @inline def hasNumberString: Boolean                    = has(DI.NumberString)
   @inline def hasNumberString(value: String): Boolean     = hasNumberString && stringCompare(value) == 0
@@ -246,24 +246,24 @@ final class InputReader[Config <: Reader.Config](
   @inline def hasBytes: Boolean = hasAnyOf(DI.Bytes | DI.BytesStart)
 
   def readSizedBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): Bytes =
-    if (hasSizedBytes) ret(receptacle.getBytes)
+    if hasSizedBytes then ret(receptacle.getBytes)
     else unexpectedDataItem(expected = "Bounded Bytes")
   @inline def hasSizedBytes: Boolean = has(DI.Bytes)
 
   def readBytesStart(): this.type =
-    if (tryReadBytesStart()) this else unexpectedDataItem(expected = "Unbounded Bytes Start")
+    if tryReadBytesStart() then this else unexpectedDataItem(expected = "Unbounded Bytes Start")
   @inline def hasBytesStart: Boolean       = has(DI.BytesStart)
   @inline def tryReadBytesStart(): Boolean = clearIfTrue(hasBytesStart)
 
   def readUnsizedBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): Bytes =
-    if (hasUnsizedBytes) bufferUnsizedBytes().readSizedBytes()
+    if hasUnsizedBytes then bufferUnsizedBytes().readSizedBytes()
     else unexpectedDataItem(expected = "Unbounded Bytes")
   @inline def hasUnsizedBytes: Boolean = hasBytesStart
 
   def bufferUnsizedBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): this.type =
-    if (tryReadBytesStart())
+    if tryReadBytesStart() then
       var result = byteAccess.empty
-      while (!tryReadBreak()) result = byteAccess.concat(result, readBytes())
+      while !tryReadBreak() do result = byteAccess.concat(result, readBytes())
       receptacle.onBytes(result)
       _dataItem = DI.Bytes
     this
@@ -275,7 +275,7 @@ final class InputReader[Config <: Reader.Config](
       case DI.Text      => stringOf(readSizedTextBytes[Array[Byte]]())
       case DI.TextStart => stringOf(readUnsizedTextBytes[Array[Byte]]())
       case _            => unexpectedDataItem(expected = "String or Text Bytes")
-  def readString(s: String): this.type = if (tryReadString(s)) this else unexpectedDataItem(expected = s""""$s"""")
+  def readString(s: String): this.type = if tryReadString(s) then this else unexpectedDataItem(expected = s""""$s"""")
   @inline def hasString: Boolean       = hasAnyOf(DI.String | DI.Chars | DI.Text | DI.TextStart)
 
   /**
@@ -324,7 +324,7 @@ final class InputReader[Config <: Reader.Config](
     */
   def tryReadStringCompare(value: String): Int =
     val result = stringCompare(value)
-    if (result == 0) clearDataItem()
+    if result == 0 then clearDataItem()
     result
 
   def readChars(): Array[Char] =
@@ -336,7 +336,7 @@ final class InputReader[Config <: Reader.Config](
       case _            => unexpectedDataItem(expected = "String or Text Bytes")
 
   def readChars(chars: Array[Char]): this.type =
-    if (tryReadChars(chars)) this
+    if tryReadChars(chars) then this
     else unexpectedDataItem(expected = s""""${new String(chars)}"""")
   @inline def hasChars: Boolean = hasString
 
@@ -386,7 +386,7 @@ final class InputReader[Config <: Reader.Config](
     */
   def tryReadCharsCompare(value: Array[Char]): Int =
     val result = charsCompare(value)
-    if (result == 0) clearDataItem()
+    if result == 0 then clearDataItem()
     result
 
   def readTextBytes[Bytes: ByteAccess](): Bytes =
@@ -397,17 +397,17 @@ final class InputReader[Config <: Reader.Config](
   @inline def hasTextBytes: Boolean = hasAnyOf(DI.Text | DI.TextStart)
 
   def readSizedTextBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): Bytes =
-    if (hasSizedTextBytes) ret(receptacle.getBytes)
+    if hasSizedTextBytes then ret(receptacle.getBytes)
     else unexpectedDataItem(expected = "Bounded Text Bytes")
   @inline def hasSizedTextBytes: Boolean = has(DI.Text)
 
   def readTextStart(): this.type =
-    if (tryReadTextStart()) this else unexpectedDataItem(expected = "Unbounded Text Start")
+    if tryReadTextStart() then this else unexpectedDataItem(expected = "Unbounded Text Start")
   @inline def hasTextStart: Boolean       = has(DI.TextStart)
   @inline def tryReadTextStart(): Boolean = clearIfTrue(hasTextStart)
 
   def readUnsizedTextBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): Bytes =
-    if (hasUnsizedTextBytes) bufferUnsizedTextBytes().readSizedTextBytes()
+    if hasUnsizedTextBytes then bufferUnsizedTextBytes().readSizedTextBytes()
     else unexpectedDataItem(expected = "Unbounded Text Bytes")
   @inline def hasUnsizedTextBytes: Boolean = hasTextStart
 
@@ -415,9 +415,9 @@ final class InputReader[Config <: Reader.Config](
     * If the current data item is an unsized Text item it'll be buffered and converted into a sized text item.
     */
   def bufferUnsizedTextBytes[Bytes]()(implicit byteAccess: ByteAccess[Bytes]): this.type =
-    if (tryReadTextStart())
+    if tryReadTextStart() then
       var result = byteAccess.empty
-      while (!tryReadBreak()) result = byteAccess.concat(result, readTextBytes())
+      while !tryReadBreak() do result = byteAccess.concat(result, readTextBytes())
       receptacle.onText(result)
       _dataItem = DI.Text
     this
@@ -435,7 +435,7 @@ final class InputReader[Config <: Reader.Config](
       case _            => this
 
   def readArrayHeader(): Long =
-    if (hasArrayHeader)
+    if hasArrayHeader then
       val result = receptacle.longValue
       clearDataItem()
       result
@@ -446,16 +446,16 @@ final class InputReader[Config <: Reader.Config](
   @inline def readArrayHeader(length: Int): this.type = readArrayHeader(length.toLong)
 
   @inline def readArrayHeader(length: Long): this.type =
-    if (tryReadArrayHeader(length)) this else unexpectedDataItem(expected = s"Array Header ($length)")
+    if tryReadArrayHeader(length) then this else unexpectedDataItem(expected = s"Array Header ($length)")
   @inline def tryReadArrayHeader(length: Int): Boolean  = tryReadArrayHeader(length.toLong)
   @inline def tryReadArrayHeader(length: Long): Boolean = clearIfTrue(hasArrayHeader(length))
 
-  def readArrayStart(): this.type          = if (tryReadArrayStart()) this else unexpectedDataItem(expected = "Array Start")
+  def readArrayStart(): this.type          = if tryReadArrayStart() then this else unexpectedDataItem(expected = "Array Start")
   @inline def hasArrayStart: Boolean       = has(DI.ArrayStart)
   @inline def tryReadArrayStart(): Boolean = clearIfTrue(hasArrayStart)
 
   def readMapHeader(): Long =
-    if (hasMapHeader)
+    if hasMapHeader then
       val result = receptacle.longValue
       clearDataItem()
       result
@@ -466,28 +466,28 @@ final class InputReader[Config <: Reader.Config](
   @inline def readMapHeader(length: Int): this.type = readMapHeader(length.toLong)
 
   @inline def readMapHeader(length: Long): this.type =
-    if (tryReadMapHeader(length)) this else unexpectedDataItem(expected = s"Map Header ($length)")
+    if tryReadMapHeader(length) then this else unexpectedDataItem(expected = s"Map Header ($length)")
   @inline def tryReadMapHeader(length: Int): Boolean  = tryReadMapHeader(length.toLong)
   @inline def tryReadMapHeader(length: Long): Boolean = clearIfTrue(hasMapHeader(length))
 
-  def readMapStart(): this.type          = if (tryReadMapStart()) this else unexpectedDataItem(expected = "Map Start")
+  def readMapStart(): this.type          = if tryReadMapStart() then this else unexpectedDataItem(expected = "Map Start")
   @inline def hasMapStart: Boolean       = has(DI.MapStart)
   @inline def tryReadMapStart(): Boolean = clearIfTrue(hasMapStart)
 
-  def readBreak(): this.type          = if (tryReadBreak()) this else unexpectedDataItem(expected = "BREAK")
+  def readBreak(): this.type          = if tryReadBreak() then this else unexpectedDataItem(expected = "BREAK")
   @inline def hasBreak: Boolean       = has(DI.Break)
   @inline def tryReadBreak(): Boolean = clearIfTrue(hasBreak)
 
   def readTag(): Tag =
-    if (hasTag) ret(receptacle.tagValue)
+    if hasTag then ret(receptacle.tagValue)
     else unexpectedDataItem(expected = "Tag")
   @inline def hasTag: Boolean               = has(DI.Tag)
   @inline def hasTag(tag: Tag): Boolean     = hasTag && receptacle.tagValue == tag
-  @inline def readTag(tag: Tag): this.type  = if (tryReadTag(tag)) this else unexpectedDataItem(expected = tag.toString)
+  @inline def readTag(tag: Tag): this.type  = if tryReadTag(tag) then this else unexpectedDataItem(expected = tag.toString)
   @inline def tryReadTag(tag: Tag): Boolean = clearIfTrue(hasTag(tag))
 
   def readSimpleValue(): Int =
-    if (hasSimpleValue)
+    if hasSimpleValue then
       val result = receptacle.intValue
       clearDataItem()
       result
@@ -496,22 +496,22 @@ final class InputReader[Config <: Reader.Config](
   @inline def hasSimpleValue(value: Int): Boolean = hasSimpleValue && receptacle.intValue == value
 
   @inline def readSimpleValue(value: Int): this.type =
-    if (tryReadSimpleValue(value)) this else unexpectedDataItem(expected = s"Simple Value $value")
+    if tryReadSimpleValue(value) then this else unexpectedDataItem(expected = s"Simple Value $value")
   @inline def tryReadSimpleValue(value: Int): Boolean = clearIfTrue(hasSimpleValue(value))
 
   @inline def hasEndOfInput: Boolean       = has(DI.EndOfInput)
-  @inline def readEndOfInput(): Unit       = if (!hasEndOfInput) unexpectedDataItem(expected = "End of Input")
+  @inline def readEndOfInput(): Unit       = if !hasEndOfInput then unexpectedDataItem(expected = "End of Input")
   @inline def tryReadEndOfInput(): Boolean = hasEndOfInput
 
   @inline def read[T]()(implicit decoder: Decoder[T]): T = decoder.read(this)
 
   def readUntilBreak[M[_], T: Decoder]()(implicit factory: Factory[T, M[T]]): M[T] =
     @tailrec def rec(b: mutable.Builder[T, M[T]]): M[T] =
-      if (tryReadBreak()) b.result() else rec(b += read[T]())
+      if tryReadBreak() then b.result() else rec(b += read[T]())
     rec(factory.newBuilder)
 
   def readUntilBreak[T](zero: T)(f: T => T): T =
-    @tailrec def rec(acc: T): T = if (tryReadBreak()) acc else rec(f(acc))
+    @tailrec def rec(acc: T): T = if tryReadBreak() then acc else rec(f(acc))
     rec(zero)
 
   /**
@@ -535,30 +535,30 @@ final class InputReader[Config <: Reader.Config](
     // if this ever becomes a problem we can upgrade to more costly heap-based recursion instead
     def skipComplex(level: Int): this.type =
       @tailrec def skipN(remaining: Long): this.type =
-        if (remaining > 0)
-          if (hasAnyOf(DI.Complex)) skipComplex(level + 1) else clearDataItem()
+        if remaining > 0 then
+          if hasAnyOf(DI.Complex) then skipComplex(level + 1) else clearDataItem()
           skipN(remaining - 1)
         else this
 
       @tailrec def skipUntilBreak(): this.type =
-        if (!tryReadBreak())
-          if (hasAnyOf(DI.Complex)) skipComplex(level + 1) else clearDataItem()
+        if !tryReadBreak() then
+          if hasAnyOf(DI.Complex) then skipComplex(level + 1) else clearDataItem()
           skipUntilBreak()
         else this
 
-      if (level < 100)
+      if level < 100 then
         dataItem() match
           case DI.ArrayHeader => skipN(readArrayHeader())
           case DI.MapHeader =>
             val elemsToSkip = readMapHeader() << 1
-            if (elemsToSkip >= 0) skipN(elemsToSkip)
+            if elemsToSkip >= 0 then skipN(elemsToSkip)
             else overflow("Maps with more than 2^62 elements cannot be skipped")
           case _ =>
             clearDataItem()
             skipUntilBreak()
       else overflow("Structures more than 100 levels deep cannot be skipped") // TODO: make configurable
 
-    if (hasAnyOf(DI.Complex))
+    if hasAnyOf(DI.Complex) then
       skipComplex(0)
     else
       clearDataItem()
@@ -570,14 +570,14 @@ final class InputReader[Config <: Reader.Config](
     tryReadArrayStart() || { readArrayHeader(arity); false }
 
   @inline def readArrayClose[T](unbounded: Boolean, value: T): T =
-    if (unbounded) readBreak()
+    if unbounded then readBreak()
     value
 
   @inline def readMapOpen(arity: Long): Boolean =
     tryReadMapStart() || { readMapHeader(arity); false }
 
   @inline def readMapClose[T](unbounded: Boolean, value: T): T =
-    if (unbounded) readBreak()
+    if unbounded then readBreak()
     value
 
   @inline def validationFailure(msg: String): Nothing = throw new Borer.Error.ValidationFailure(position, msg)
@@ -596,7 +596,7 @@ final class InputReader[Config <: Reader.Config](
     throw new Borer.Error.InvalidInputData(position, expected, actual)
 
   @inline private def stringOf(bytes: Array[Byte]): String =
-    if (bytes.length > 0) new String(bytes, StandardCharsets.UTF_8) else ""
+    if bytes.length > 0 then new String(bytes, StandardCharsets.UTF_8) else ""
 
   @inline private def clearDataItem(): Unit = _dataItem = DI.None
 

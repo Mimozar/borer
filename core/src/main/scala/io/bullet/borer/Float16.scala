@@ -35,18 +35,18 @@ object Float16:
     var mant = hbits & 0x03FF // 10 bits mantissa
     var exp  = hbits & 0x7C00 // 5 bits exponent
 
-    if (exp == 0x7C00) // NaN/Inf
+    if exp == 0x7C00 then // NaN/Inf
       exp = 0x3FC00
-    else if (exp != 0) // normalized value
+    else if exp != 0 then // normalized value
       exp += 0x1C000       // exp - 15 + 127
     else
-      if (mant != 0) // && exp==0 -> subnormal
+      if mant != 0 then // && exp==0 -> subnormal
         exp = 0x1C400  // make it normal
-        while ({
+        while {
           mant <<= 1          // mantissa * 2
           exp -= 0x400        // decrease exp by 1
           (mant & 0x400) == 0 // while not normal
-        }) {}
+        } do {}
         mant &= 0x3FF // discard subnormal bit
     java.lang.Float.intBitsToFloat((hbits & 0x8000) << 16 | (exp | mant) << 13)
 
@@ -58,17 +58,17 @@ object Float16:
     val sign    = fbits >>> 16 & 0x8000 // sign only
     val lfbits  = fbits & 0x7FFFFFFF
     val rounded = lfbits + 0x1000
-    if (rounded >= 0x47800000) // might be or become NaN/Inf
+    if rounded >= 0x47800000 then // might be or become NaN/Inf
       val sign2 = sign | 0x7C00
-      if (rounded < 0x7F800000) // is or must become NaN/Inf
+      if rounded < 0x7F800000 then // is or must become NaN/Inf
         // was value but too large
         sign2 // make it +/-Inf
       else
         sign2 |                     // remains +/-Inf or NaN
         (fbits & 0x007FFFFF) >>> 13 // keep NaN (and Inf) bits
-    else if (rounded >= 0x38800000)  // remains normalized value
+    else if rounded >= 0x38800000 then  // remains normalized value
       sign | rounded - 0x38000000 >>> 13 // exp - 127 + 15
-    else if (rounded < 0x33000000)   // too small for subnormal
+    else if rounded < 0x33000000 then   // too small for subnormal
       sign                               // becomes +/-0
     else
       val rounded2 = lfbits >>> 23; // tmp exp for subnormal calc

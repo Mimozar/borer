@@ -50,13 +50,13 @@ final class Writer(
   def writeFloat16(value: Float): this.type = { receiver.onFloat16(value); this }
 
   def writeFloat(value: Float): this.type =
-    if (config.compressFloatingPointValues && Util.canBeRepresentedAsFloat16(value))
+    if config.compressFloatingPointValues && Util.canBeRepresentedAsFloat16(value) then
       receiver.onFloat16(value)
     else receiver.onFloat(value)
     this
 
   def writeDouble(value: Double): this.type =
-    if (config.compressFloatingPointValues && Util.canBeRepresentedAsFloat(value))
+    if config.compressFloatingPointValues && Util.canBeRepresentedAsFloat(value) then
       writeFloat(value.toFloat)
     else receiver.onDouble(value)
     this
@@ -100,11 +100,11 @@ final class Writer(
   def writeToArray[A: Encoder, B: Encoder, C: Encoder](a: A, b: B, c: C): this.type =
     writeArrayOpen(3).write(a).write(b).write(c).writeArrayClose()
 
-  def writeEmptyMap(): this.type = if (writingJson) writeMapStart().writeBreak() else writeMapHeader(0)
+  def writeEmptyMap(): this.type = if writingJson then writeMapStart().writeBreak() else writeMapHeader(0)
 
   def writeIndexedSeq[T: Encoder](x: IndexedSeq[T]): this.type =
     @tailrec def rec(ix: Int): Unit =
-      if (ix < x.size)
+      if ix < x.size then
         write(x(ix))
         rec(ix + 1)
     writeArrayOpen(x.size)
@@ -113,10 +113,10 @@ final class Writer(
 
   def writeLinearSeq[T: Encoder](x: LinearSeq[T]): this.type =
     @tailrec def rec(x: LinearSeq[T]): Unit =
-      if (x.nonEmpty)
+      if x.nonEmpty then
         write(x.head)
         rec(x.tail)
-    if (writingJson || x.nonEmpty)
+    if writingJson || x.nonEmpty then
       writeArrayStart()
       rec(x)
       writeBreak()
@@ -124,39 +124,39 @@ final class Writer(
 
   def writeIterableOnce[T: Encoder](iterableOnce: XIterableOnce[T]): this.type =
     val size = iterableOnce.knownSize
-    if (size > 0)
+    if size > 0 then
       writeArrayOpen(size)
       val iterator = iterableOnce.iterator
-      while (iterator.hasNext) write(iterator.next())
+      while iterator.hasNext do write(iterator.next())
       writeArrayClose()
-    else if (size < 0) writeIterator(iterableOnce.iterator)
+    else if size < 0 then writeIterator(iterableOnce.iterator)
     else writeEmptyArray()
 
   def writeIterator[T: Encoder](iterator: Iterator[T]): this.type =
-    if (iterator.hasNext)
+    if iterator.hasNext then
       writeArrayStart()
-      while (iterator.hasNext) write(iterator.next())
+      while iterator.hasNext do write(iterator.next())
       writeBreak()
     else writeEmptyArray()
 
   def writeBytesIterator[Bytes: ByteAccess](iterator: Iterator[Bytes]): this.type =
     writeBytesStart()
-    while (iterator.hasNext) writeBytes(iterator.next())
+    while iterator.hasNext do writeBytes(iterator.next())
     writeBreak()
 
   def writeStringIterator(iterator: Iterator[String]): this.type =
     writeTextStart()
-    while (iterator.hasNext) writeString(iterator.next())
+    while iterator.hasNext do writeString(iterator.next())
     writeBreak()
 
   def writeMap[A: Encoder, B: Encoder](x: Map[A, B]): this.type =
-    if (x.nonEmpty)
+    if x.nonEmpty then
       val iterator = x.iterator
       def writeEntries(): Unit =
-        while (iterator.hasNext)
+        while iterator.hasNext do
           val (k, v) = iterator.next()
           write(k).write(v)
-      if (writingJson)
+      if writingJson then
         writeMapStart()
         writeEntries()
         writeBreak()
@@ -167,16 +167,16 @@ final class Writer(
     else writeEmptyMap()
 
   def writeArrayOpen(size: Int): this.type =
-    if (target eq Json) writeArrayStart() else writeArrayHeader(size)
+    if target eq Json then writeArrayStart() else writeArrayHeader(size)
 
   def writeArrayClose(): this.type =
-    if (target eq Json) writeBreak() else this
+    if target eq Json then writeBreak() else this
 
   def writeMapOpen(size: Int): this.type =
-    if (target eq Json) writeMapStart() else writeMapHeader(size)
+    if target eq Json then writeMapStart() else writeMapHeader(size)
 
   def writeMapClose(): this.type =
-    if (target eq Json) writeBreak() else this
+    if target eq Json then writeBreak() else this
 
 object Writer:
 

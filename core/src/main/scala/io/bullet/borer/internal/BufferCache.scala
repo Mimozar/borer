@@ -17,7 +17,7 @@ private[borer] object ByteArrayCache:
 
   def acquire(size: Int): Array[Byte] =
     var buf = cache.getAndSet(null)
-    if ((buf eq null) || buf.length != size) buf = new Array[Byte](size)
+    if (buf eq null) || buf.length != size then buf = new Array[Byte](size)
     buf
 
   def release(buf: Array[Byte]): Unit = cache.set(buf)
@@ -28,7 +28,7 @@ private[borer] object CharArrayCache:
 
   def acquire(size: Int): Array[Char] =
     var buf = cache.getAndSet(null)
-    if ((buf eq null) || buf.length != size) buf = new Array[Char](size)
+    if (buf eq null) || buf.length != size then buf = new Array[Char](size)
     buf
 
   def release(buf: Array[Char]): Unit = cache.set(buf)
@@ -39,7 +39,7 @@ private[borer] object ByteBufferCache:
 
   def acquire(size: Int): ByteBuffer =
     var buf = cache.getAndSet(null)
-    if ((buf eq null) || buf.capacity != size) buf = ByteBuffer.allocate(size) else buf.clear()
+    if (buf eq null) || buf.capacity != size then buf = ByteBuffer.allocate(size) else buf.clear()
     buf
 
   def release(buf: ByteBuffer): Unit = cache.set(buf)

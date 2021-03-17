@@ -42,7 +42,7 @@ object ByteArrayAccess:
 
   final val instance: ByteArrayAccess =
     val unsafe = io.bullet.borer.internal.Unsafe.byteArrayAccess
-    if (unsafe ne null) unsafe else new Default
+    if unsafe ne null then unsafe else new Default
 
   final class Default extends ByteArrayAccess:
 
@@ -86,11 +86,11 @@ object ByteArrayAccess:
       byteArray(ix + 7) = value.toByte
 
     def shortArrayToByteArray(source: Array[Short], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val bytes = new Array[Byte](source.length << 1)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = (value >>> 8).toByte
             bytes(targetIx + 1) = value.toByte
@@ -98,22 +98,22 @@ object ByteArrayAccess:
           else bytes
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = value.toByte
             bytes(targetIx + 1) = (value >>> 8).toByte
             recLittleEndian(sourceIx + 1, targetIx + 2)
           else bytes
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyByteArray
 
     def intArrayToByteArray(source: Array[Int], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val bytes = new Array[Byte](source.length << 2)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = (value >>> 24).toByte
             bytes(targetIx + 1) = (value >>> 16).toByte
@@ -123,7 +123,7 @@ object ByteArrayAccess:
           else bytes
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = value.toByte
             bytes(targetIx + 1) = (value >>> 8).toByte
@@ -132,15 +132,15 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 1, targetIx + 4)
           else bytes
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyByteArray
 
     def longArrayToByteArray(source: Array[Long], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val bytes = new Array[Byte](source.length << 3)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = (value >>> 56).toByte
             bytes(targetIx + 1) = (value >>> 48).toByte
@@ -154,7 +154,7 @@ object ByteArrayAccess:
           else bytes
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = source(sourceIx)
             bytes(targetIx) = value.toByte
             bytes(targetIx + 1) = (value >>> 8).toByte
@@ -167,15 +167,15 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 1, targetIx + 8)
           else bytes
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyByteArray
 
     def floatArrayToByteArray(source: Array[Float], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val bytes = new Array[Byte](source.length << 2)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = java.lang.Float.floatToIntBits(source(sourceIx))
             bytes(targetIx) = (value >>> 24).toByte
             bytes(targetIx + 1) = (value >>> 16).toByte
@@ -185,7 +185,7 @@ object ByteArrayAccess:
           else bytes
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = java.lang.Float.floatToIntBits(source(sourceIx))
             bytes(targetIx) = value.toByte
             bytes(targetIx + 1) = (value >>> 8).toByte
@@ -194,15 +194,15 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 1, targetIx + 4)
           else bytes
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyByteArray
 
     def doubleArrayToByteArray(source: Array[Double], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val bytes = new Array[Byte](source.length << 3)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = java.lang.Double.doubleToLongBits(source(sourceIx))
             bytes(targetIx) = (value >>> 56).toByte
             bytes(targetIx + 1) = (value >>> 48).toByte
@@ -216,7 +216,7 @@ object ByteArrayAccess:
           else bytes
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Byte] =
-          if (sourceIx < source.length)
+          if sourceIx < source.length then
             val value = java.lang.Double.doubleToLongBits(source(sourceIx))
             bytes(targetIx) = value.toByte
             bytes(targetIx + 1) = (value >>> 8).toByte
@@ -229,38 +229,38 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 1, targetIx + 8)
           else bytes
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyByteArray
 
     def byteArrayToShortArray(source: Array[Byte], byteOrder: ByteOrder): Array[Short] =
-      if (source.length > 0)
-        if ((source.length & 1) != 0)
+      if source.length > 0 then
+        if (source.length & 1) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Short](source.length >> 1)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Short] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = ((source(sourceIx).toInt << 8) | (source(sourceIx + 1) & 0xFF)).toShort
             recBigEndian(sourceIx + 2, targetIx + 1)
           else target
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Short] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = ((source(sourceIx) & 0xFF) | (source(sourceIx + 1).toInt << 8)).toShort
             recLittleEndian(sourceIx + 2, targetIx + 1)
           else target
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyShortArray
 
     def byteArrayToIntArray(source: Array[Byte], byteOrder: ByteOrder): Array[Int] =
-      if (source.length > 0)
-        if ((source.length & 3) != 0)
+      if source.length > 0 then
+        if (source.length & 3) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Int](source.length >> 2)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Int] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = (source(sourceIx).toInt << 24) |
               ((source(sourceIx + 1) & 0xFF) << 16) |
               ((source(sourceIx + 2) & 0xFF) << 8) |
@@ -269,7 +269,7 @@ object ByteArrayAccess:
           else target
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Int] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = (source(sourceIx) & 0xFF) |
               ((source(sourceIx + 1) & 0xFF) << 8) |
               ((source(sourceIx + 2) & 0xFF) << 16) |
@@ -277,17 +277,17 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 4, targetIx + 1)
           else target
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyIntArray
 
     def byteArrayToLongArray(source: Array[Byte], byteOrder: ByteOrder): Array[Long] =
-      if (source.length > 0)
-        if ((source.length & 7) != 0)
+      if source.length > 0 then
+        if (source.length & 7) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Long](source.length >> 3)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Long] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = (source(sourceIx).toLong << 56) |
               ((source(sourceIx + 1) & 0xFFL) << 48) |
               ((source(sourceIx + 2) & 0xFFL) << 40) |
@@ -300,7 +300,7 @@ object ByteArrayAccess:
           else target
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Long] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = (source(sourceIx) & 0xFFL) |
               ((source(sourceIx + 1) & 0xFFL) << 8) |
               ((source(sourceIx + 2) & 0xFFL) << 16) |
@@ -312,17 +312,17 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 8, targetIx + 1)
           else target
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyLongArray
 
     def byteArrayToFloatArray(source: Array[Byte], byteOrder: ByteOrder): Array[Float] =
-      if (source.length > 0)
-        if ((source.length & 3) != 0)
+      if source.length > 0 then
+        if (source.length & 3) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Float](source.length >> 2)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Float] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = java.lang.Float.intBitsToFloat {
               (source(sourceIx).toInt << 24) |
               ((source(sourceIx + 1) & 0xFF) << 16) |
@@ -333,7 +333,7 @@ object ByteArrayAccess:
           else target
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Float] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = java.lang.Float.intBitsToFloat {
               (source(sourceIx) & 0xFF) |
               ((source(sourceIx + 1) & 0xFF) << 8) |
@@ -343,17 +343,17 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 4, targetIx + 1)
           else target
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyFloatArray
 
     def byteArrayToDoubleArray(source: Array[Byte], byteOrder: ByteOrder): Array[Double] =
-      if (source.length > 0)
-        if ((source.length & 7) != 0)
+      if source.length > 0 then
+        if (source.length & 7) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Double](source.length >> 3)
 
         @tailrec def recBigEndian(sourceIx: Int, targetIx: Int): Array[Double] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = java.lang.Double.longBitsToDouble {
               (source(sourceIx).toLong << 56) |
               ((source(sourceIx + 1) & 0xFFL) << 48) |
@@ -368,7 +368,7 @@ object ByteArrayAccess:
           else target
 
         @tailrec def recLittleEndian(sourceIx: Int, targetIx: Int): Array[Double] =
-          if (targetIx < target.length)
+          if targetIx < target.length then
             target(targetIx) = java.lang.Double.longBitsToDouble {
               (source(sourceIx) & 0xFFL) |
               ((source(sourceIx + 1) & 0xFFL) << 8) |
@@ -382,5 +382,5 @@ object ByteArrayAccess:
             recLittleEndian(sourceIx + 8, targetIx + 1)
           else target
 
-        if (byteOrder == ByteOrder.BIG_ENDIAN) recBigEndian(0, 0) else recLittleEndian(0, 0)
+        if byteOrder == ByteOrder.BIG_ENDIAN then recBigEndian(0, 0) else recLittleEndian(0, 0)
       else Array.emptyDoubleArray

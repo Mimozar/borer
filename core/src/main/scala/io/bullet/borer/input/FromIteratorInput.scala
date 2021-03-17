@@ -32,7 +32,7 @@ trait FromIteratorInput:
 
     private[this] var history                                            = List.empty[Input[Bytes]]
     private[this] var previous: Input[Bytes]                             = _
-    private[this] var current: Input[Bytes]                              = if (inputIterator.hasNext) inputIterator.next() else null
+    private[this] var current: Input[Bytes]                              = if inputIterator.hasNext then inputIterator.next() else null
     private[this] var currentStart: Long                                 = _
     private[this] var outerPaddingProvider: Input.PaddingProvider[Bytes] = _
     private[this] var padBytesRecursion                                  = false
@@ -50,7 +50,7 @@ trait FromIteratorInput:
 
         val inputCursor = input.cursor
         val inputStart  = inputEnd - inputCursor
-        if (inputStart <= target)
+        if inputStart <= target then
           input.unread((inputEnd - target).toInt)
           previous = history match
             case head :: tail => history = tail; head
@@ -67,7 +67,7 @@ trait FromIteratorInput:
             case Nil => throw new IllegalStateException // rollback too far?
 
       val currentCursor = cursorOf(current)
-      if (currentCursor < numberOfBytes)
+      if currentCursor < numberOfBytes then
         current.unread(currentCursor.toInt)
         val target = currentStart + currentCursor - numberOfBytes
         inputIterator = rollBackOne(previous, currentStart, target, current +: inputIterator)
@@ -78,11 +78,11 @@ trait FromIteratorInput:
 
     def readBytePadded(pp: Input.PaddingProvider[Bytes]): Byte =
       outerPaddingProvider = pp
-      if (current ne null) current.readBytePadded(this)
+      if current ne null then current.readBytePadded(this)
       else pp.padByte()
 
     def padByte(): Byte =
-      if (inputIterator.hasNext)
+      if inputIterator.hasNext then
         fetchNext(0)
         current.readBytePadded(this)
       else outerPaddingProvider.padByte()
@@ -91,13 +91,13 @@ trait FromIteratorInput:
 
     def readDoubleByteBigEndianPadded(pp: Input.PaddingProvider[Bytes]): Char =
       outerPaddingProvider = pp
-      if (current ne null) current.readDoubleByteBigEndianPadded(this)
+      if current ne null then current.readDoubleByteBigEndianPadded(this)
       else pp.padDoubleByte(0)
 
     def padDoubleByte(remaining: Int): Char =
-      if (inputIterator.hasNext)
+      if inputIterator.hasNext then
         fetchNext(remaining)
-        if (remaining < 1) current.readDoubleByteBigEndianPadded(this)
+        if remaining < 1 then current.readDoubleByteBigEndianPadded(this)
         else ((previous.readByte() << 8) | current.readBytePadded(this) & 0xFF).toChar
       else outerPaddingProvider.padDoubleByte(remaining)
 
@@ -105,11 +105,11 @@ trait FromIteratorInput:
 
     def readQuadByteBigEndianPadded(pp: Input.PaddingProvider[Bytes]): Int =
       outerPaddingProvider = pp
-      if (current ne null) current.readQuadByteBigEndianPadded(this)
+      if current ne null then current.readQuadByteBigEndianPadded(this)
       else pp.padQuadByte(0)
 
     def padQuadByte(remaining: Int): Int =
-      if (inputIterator.hasNext)
+      if inputIterator.hasNext then
         fetchNext(remaining)
         remaining match
           case 0 => current.readQuadByteBigEndianPadded(this)
@@ -129,11 +129,11 @@ trait FromIteratorInput:
 
     def readOctaByteBigEndianPadded(pp: Input.PaddingProvider[Bytes]): Long =
       outerPaddingProvider = pp
-      if (current ne null) current.readOctaByteBigEndianPadded(this)
+      if current ne null then current.readOctaByteBigEndianPadded(this)
       else pp.padOctaByte(0)
 
     def padOctaByte(remaining: Int): Long =
-      if (inputIterator.hasNext)
+      if inputIterator.hasNext then
         fetchNext(remaining)
         remaining match
           case 0 => current.readOctaByteBigEndianPadded(this)
@@ -172,20 +172,20 @@ trait FromIteratorInput:
 
     def readBytes(length: Long, pp: Input.PaddingProvider[Bytes]): Bytes =
       outerPaddingProvider = pp
-      if (current ne null) current.readBytes(length, this)
+      if current ne null then current.readBytes(length, this)
       else pp.padBytes(byteAccess.empty, length)
 
     def padBytes(rest: Bytes, missing: Long): Bytes =
-      if (!padBytesRecursion)
+      if !padBytesRecursion then
         padBytesRecursion = true
 
         @tailrec def rec(result: Bytes, missing: Long): Bytes =
           padBytesRecursionRest = byteAccess.empty
           padBytesRecursionMissing = 0L
-          if (inputIterator.hasNext)
+          if inputIterator.hasNext then
             fetchNext(0)
             val nextBytes = current.readBytes(missing, this)
-            if (padBytesRecursionMissing == 0) byteAccess.concat(result, nextBytes)
+            if padBytesRecursionMissing == 0 then byteAccess.concat(result, nextBytes)
             else rec(byteAccess.concat(result, padBytesRecursionRest), padBytesRecursionMissing)
           else outerPaddingProvider.padBytes(result, missing)
 
@@ -201,10 +201,10 @@ trait FromIteratorInput:
       val currentCursor = cursorOf(current)
       val cursor        = currentStart + currentCursor
 
-      history = if ((previous ne null) && currentCursor < 256)
+      history = if (previous ne null) && currentCursor < 256 then
         // keep the prefix of the history that is required to maintain a total history length of >= 256 bytes
         @tailrec def rec(rest: List[Input[Bytes]], size: Long, buf: ListBuffer[Input[Bytes]]): List[Input[Bytes]] =
-          if (size < 256 && rest.nonEmpty) rec(rest.tail, size + cursorOf(rest.head), buf += rest.head)
+          if size < 256 && rest.nonEmpty then rec(rest.tail, size + cursorOf(rest.head), buf += rest.head)
           else buf.toList
         rec(history, cursorOf(previous), new ListBuffer[Input[Bytes]] += previous)
       else Nil
@@ -213,4 +213,4 @@ trait FromIteratorInput:
       currentStart = cursor + remaining.toLong
       current = inputIterator.next()
 
-    private def cursorOf(input: Input[Bytes]): Long = if (input ne null) input.cursor else 0L
+    private def cursorOf(input: Input[Bytes]): Long = if input ne null then input.cursor else 0L

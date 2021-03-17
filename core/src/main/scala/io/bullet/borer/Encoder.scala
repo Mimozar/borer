@@ -69,13 +69,13 @@ object Encoder extends LowPrioEncoders:
     * Same as the other `from` overload above, but for nullary case classes (i.e. with an empty parameter list).
     */
   def from[T](unapply: T => Boolean): Encoder[T] =
-    Encoder((w, x) => if (unapply(x)) w.writeEmptyArray() else sys.error("Unapply unexpectedly failed: " + unapply))
+    Encoder((w, x) => if unapply(x) then w.writeEmptyArray() else sys.error("Unapply unexpectedly failed: " + unapply))
 
   /**
     * Creates a "unified" [[Encoder]] from two encoders that each target only a single data format.
     */
   def targetSpecific[T](cbor: Encoder[T], json: Encoder[T]): Encoder[T] = { (w, x) =>
-    if (w.target == Cbor) cbor.write(w, x)
+    if w.target == Cbor then cbor.write(w, x)
     else json.write(w, x)
   }
 
@@ -130,7 +130,7 @@ object Encoder extends LowPrioEncoders:
 
   def forByteArray(jsonBaseEncoding: BaseEncoding): Encoder[Array[Byte]] =
     Encoder { (w, x) =>
-      if (w.writingJson) w.writeChars(jsonBaseEncoding.encode(x))
+      if w.writingJson then w.writeChars(jsonBaseEncoding.encode(x))
       else w.writeBytes(x)
     }
 
@@ -143,7 +143,7 @@ object Encoder extends LowPrioEncoders:
         case 64                 => w.writeOverLong(negative = true, ~x.longValue)
         case _ if w.writingCbor =>
           val bytes = x.toByteArray
-          w.writeTag(if (x.signum < 0) {
+          w.writeTag(if x.signum < 0 then {
             Util.inPlaceNegate(bytes); Tag.NegativeBigNum
           } else Tag.PositiveBigNum)
           w.writeBytes(bytes)
@@ -154,11 +154,11 @@ object Encoder extends LowPrioEncoders:
 
   implicit val forJBigDecimal: Encoder[JBigDecimal] =
     Encoder { (w, x) =>
-      if (w.writingCbor)
-        if (x.scale != 0) w.writeTag(Tag.DecimalFraction).writeArrayHeader(2).writeInt(x.scale)
+      if w.writingCbor then
+        if x.scale != 0 then w.writeTag(Tag.DecimalFraction).writeArrayHeader(2).writeInt(x.scale)
         w.write(x.unscaledValue)
       else
-        if (x.scale != 0) w.writeNumberString(x.toString)
+        if x.scale != 0 then w.writeNumberString(x.toString)
         else w.write(x.unscaledValue)
     }
 
@@ -167,21 +167,21 @@ object Encoder extends LowPrioEncoders:
   implicit val forByteArrayIterator: Encoder[Iterator[Array[Byte]]] =
     Encoder { (w, x) =>
       w.writeBytesStart()
-      while (x.hasNext) w.writeBytes(x.next())
+      while x.hasNext do w.writeBytes(x.next())
       w.writeBreak()
     }
 
   implicit def forBytesIterator[Bytes: ByteAccess]: Encoder[Iterator[Bytes]] =
     Encoder { (w, x) =>
       w.writeBytesStart()
-      while (x.hasNext) w.writeBytes(x.next())
+      while x.hasNext do w.writeBytes(x.next())
       w.writeBreak()
     }
 
   implicit val forStringIterator: Encoder[Iterator[String]] =
     Encoder { (w, x) =>
       w.writeTextStart()
-      while (x.hasNext) w.writeString(x.next())
+      while x.hasNext do w.writeString(x.next())
       w.writeBreak()
     }
 
@@ -195,7 +195,7 @@ object Encoder extends LowPrioEncoders:
           case None    => w.writeEmptyArray()
 
       def withDefaultValue(defaultValue: Option[T]): Encoder[Option[T]] =
-        if (defaultValue eq None)
+        if defaultValue eq None then
           new Encoder.PossiblyWithoutOutput[Option[T]] {
             def producesOutputFor(value: Option[T]) = value ne None
             def write(w: Writer, value: Option[T]) =
@@ -212,10 +212,10 @@ object Encoder extends LowPrioEncoders:
       def write(w: Writer, value: M[T]) = w.writeIndexedSeq(value)
 
       def withDefaultValue(defaultValue: M[T]): Encoder[M[T]] =
-        if (defaultValue.isEmpty)
+        if defaultValue.isEmpty then
           new PossiblyWithoutOutput[M[T]] {
             def producesOutputFor(value: M[T]) = value.nonEmpty
-            def write(w: Writer, value: M[T])  = if (value.nonEmpty) w.writeIndexedSeq(value) else w
+            def write(w: Writer, value: M[T])  = if value.nonEmpty then w.writeIndexedSeq(value) else w
           }
         else this
     }
@@ -225,10 +225,10 @@ object Encoder extends LowPrioEncoders:
       def write(w: Writer, value: M[T]) = w.writeLinearSeq(value)
 
       def withDefaultValue(defaultValue: M[T]): Encoder[M[T]] =
-        if (defaultValue.isEmpty)
+        if defaultValue.isEmpty then
           new PossiblyWithoutOutput[M[T]] {
             def producesOutputFor(value: M[T]) = value.nonEmpty
-            def write(w: Writer, value: M[T])  = if (value.nonEmpty) w.writeLinearSeq(value) else w
+            def write(w: Writer, value: M[T])  = if value.nonEmpty then w.writeLinearSeq(value) else w
           }
         else this
     }
@@ -238,18 +238,18 @@ object Encoder extends LowPrioEncoders:
       def write(w: Writer, value: M[A, B]) = w.writeMap(value)
 
       def withDefaultValue(defaultValue: M[A, B]): Encoder[M[A, B]] =
-        if (defaultValue.isEmpty)
+        if defaultValue.isEmpty then
           new PossiblyWithoutOutput[M[A, B]] {
             def producesOutputFor(value: M[A, B]) = value.nonEmpty
-            def write(w: Writer, value: M[A, B])  = if (value.nonEmpty) w.writeMap(value) else w
+            def write(w: Writer, value: M[A, B])  = if value.nonEmpty then w.writeMap(value) else w
           }
         else this
     }
 
   implicit def forArray[T: Encoder]: Encoder[Array[T]] =
     Encoder { (w, x) =>
-      @tailrec def rec(w: Writer, ix: Int): w.type = if (ix < x.length) rec(w.write(x(ix)), ix + 1) else w
-      if (w.writingJson) rec(w.writeArrayStart(), 0).writeBreak()
+      @tailrec def rec(w: Writer, ix: Int): w.type = if ix < x.length then rec(w.write(x(ix)), ix + 1) else w
+      if w.writingJson then rec(w.writeArrayStart(), 0).writeBreak()
       else rec(w.writeArrayHeader(x.length), 0)
     }
 
@@ -261,11 +261,11 @@ object Encoder extends LowPrioEncoders:
 
     implicit def default[A: Encoder, B: Encoder]: Encoder[Either[A, B]] =
       Encoder { (w, x) =>
-        if (w.writingJson) w.writeArrayStart() else w.writeMapHeader(1)
+        if w.writingJson then w.writeArrayStart() else w.writeMapHeader(1)
         x match
           case Left(a)  => w.writeInt(0).write(a)
           case Right(b) => w.writeInt(1).write(b)
-        if (w.writingJson) w.writeBreak() else w
+        if w.writingJson then w.writeBreak() else w
       }
 
     /**
@@ -298,7 +298,7 @@ object Encoder extends LowPrioEncoders:
     implicit def boxedDoubleEncoder: Encoder[JDouble] = forDouble.asInstanceOf[Encoder[JDouble]]
 
   object StringBooleans:
-    implicit val booleanEncoder: Encoder[Boolean]       = Encoder((w, x) => w.writeString(if (x) "true" else "false"))
+    implicit val booleanEncoder: Encoder[Boolean]       = Encoder((w, x) => w.writeString(if x then "true" else "false"))
     implicit def boxedBooleanEncoder: Encoder[JBoolean] = forBoolean.asInstanceOf[Encoder[JBoolean]]
 
   object StringNulls:
@@ -315,7 +315,7 @@ object Encoder extends LowPrioEncoders:
     */
   final class ConcatEncoder[T](encoder0: Encoder[T], encoder1: Encoder[T], maxBufferSize: Int = 16384)
       extends Encoder[T]:
-    if (maxBufferSize <= 0 || !Util.isPowerOf2(maxBufferSize))
+    if maxBufferSize <= 0 || !Util.isPowerOf2(maxBufferSize) then
       throw new IllegalArgumentException(s"maxBufferSize must be a positive power of two, but was $maxBufferSize")
 
     def write(w: Writer, value: T): Writer =
@@ -355,20 +355,20 @@ object Encoder extends LowPrioEncoders:
       encoder0.write(w, value)
 
       // stash now contains the complete first encoding, except for the Header/Start element
-      if (len0 < 0) stash.dropLastBreakDataItem()
+      if len0 < 0 then stash.dropLastBreakDataItem()
 
       w.receiver = new Receiver.WithDefault {
 
         override def onArrayHeader(length: Long): Unit =
-          if (arrayOrMap == 1)
+          if arrayOrMap == 1 then
             w.receiver = originalReceiver
             len1 = length
-            if (len0 >= 0 && len1 >= 0 && len0 + len1 >= 0) w.writeArrayHeader(len0 + len1) else w.writeArrayStart()
+            if len0 >= 0 && len1 >= 0 && len0 + len1 >= 0 then w.writeArrayHeader(len0 + len1) else w.writeArrayStart()
             stash.pullAll(originalReceiver)
           else unsupported("Cannot merge a 'to-Map' Encoder with a 'to-Array' Encoder")
 
         override def onArrayStart(): Unit =
-          if (arrayOrMap == 1)
+          if arrayOrMap == 1 then
             w.receiver = originalReceiver
             len1 = -1
             w.writeArrayStart()
@@ -376,15 +376,15 @@ object Encoder extends LowPrioEncoders:
           else unsupported("Cannot merge a 'to-Map' Encoder with a 'to-Array' Encoder")
 
         override def onMapHeader(length: Long): Unit =
-          if (arrayOrMap == 2)
+          if arrayOrMap == 2 then
             w.receiver = originalReceiver
             len1 = length
-            if (len0 >= 0 && len1 >= 0 && len0 + len1 >= 0) w.writeMapHeader(len0 + len1) else w.writeMapStart()
+            if len0 >= 0 && len1 >= 0 && len0 + len1 >= 0 then w.writeMapHeader(len0 + len1) else w.writeMapStart()
             stash.pullAll(originalReceiver)
           else unsupported("Cannot merge a 'to-Array' Encoder with a 'to-Map' Encoder")
 
         override def onMapStart(): Unit =
-          if (arrayOrMap == 2)
+          if arrayOrMap == 2 then
             w.receiver = originalReceiver
             len1 = -1
             w.writeMapStart()
@@ -398,7 +398,7 @@ object Encoder extends LowPrioEncoders:
       encoder1.write(w, value)
 
       // if we dropped the terminating break before and encoder1 did not emit one, we need to manually append it
-      if (len0 < 0 && len1 >= 0) w.writeBreak()
+      if len0 < 0 && len1 >= 0 then w.writeBreak()
       w
 
 sealed abstract class LowPrioEncoders extends TupleEncoders:
@@ -413,10 +413,10 @@ sealed abstract class LowPrioEncoders extends TupleEncoders:
           case x                => w.writeIterableOnce(x)
 
       def withDefaultValue(defaultValue: M[T]): Encoder[M[T]] =
-        if (isEmpty(defaultValue))
+        if isEmpty(defaultValue) then
           new Encoder.PossiblyWithoutOutput[M[T]] {
             def producesOutputFor(value: M[T]) = !isEmpty(value)
-            def write(w: Writer, value: M[T])  = if (isEmpty(value)) w else self.write(w, value)
+            def write(w: Writer, value: M[T])  = if isEmpty(value) then w else self.write(w, value)
           }
         else this
 

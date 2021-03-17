@@ -21,9 +21,9 @@ trait FromFileInput { this: FromByteArrayInput with FromInputStreamInput with Fr
     def apply(value: File) = fromFile(value)
 
   def fromFile(file: File, bufferSize: Int = 16384): Input[Array[Byte]] =
-    if (bufferSize < 256) throw new IllegalArgumentException(s"bufferSize must be >= 256 but was $bufferSize")
+    if bufferSize < 256 then throw new IllegalArgumentException(s"bufferSize must be >= 256 but was $bufferSize")
     val fileSize = file.length()
-    if (fileSize > bufferSize) fromInputStream(new FileInputStream(file), bufferSize)
+    if fileSize > bufferSize then fromInputStream(new FileInputStream(file), bufferSize)
     else fromByteArray(Files.readAllBytes(file.toPath))
 
 }

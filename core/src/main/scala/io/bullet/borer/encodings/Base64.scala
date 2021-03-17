@@ -13,7 +13,7 @@ import io.bullet.borer.internal.ByteArrayAccess
 import scala.annotation.tailrec
 
 final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(name, 6, alphabet):
-  if (alphabetChars.length != 64) throw new IllegalArgumentException
+  if alphabetChars.length != 64 then throw new IllegalArgumentException
 
   def encode(bytes: Array[Byte]): Array[Char] =
     val sl = bytes.length
@@ -22,7 +22,7 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
       throw new IllegalArgumentException(
         s"Overflow: Cannot $name-encode a byte array with size > 1.610.612.735 (was: $sl")
 
-    if (sl > 1610612735) failOverflow()
+    if sl > 1610612735 then failOverflow()
 
     val result = new Array[Char](((sl + 2) / 3) << 2)
     val baa    = ByteArrayAccess.instance
@@ -46,21 +46,21 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
       result
 
     @tailrec def encode3(si: Int, di: Int): Array[Char] =
-      if (si <= sl3)
+      if si <= sl3 then
         val quad = baa.doubleByteBigEndian(bytes, si).toInt << 16 | (bytes(si + 2) & 0xFF) << 8
         result(di + 0) = alphabetChars(quad << 0 >>> 26)
         result(di + 1) = alphabetChars(quad << 6 >>> 26)
         result(di + 2) = alphabetChars(quad << 12 >>> 26)
         result(di + 3) = alphabetChars(quad << 18 >>> 26)
         encode3(si + 3, di + 4)
-      else if (si < sl) encodeRest(si, di)
+      else if si < sl then encodeRest(si, di)
       else result
 
     encode3(0, 0)
 
   def decode(chars: Array[Char]): Array[Byte] =
     val sl = chars.length
-    if (sl > 0)
+    if sl > 0 then
       def failIllegalLength() =
         throw new IllegalArgumentException(
           s"Illegal Encoding: The given char array has a length that is not evenly divisible by 4 ($sl).")
@@ -69,7 +69,7 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
         throw new IllegalArgumentException(
           s"Illegal Padding: The given encoding has a padding that doesn't conform to the $name spec.")
 
-      if ((sl & 3) != 0) failIllegalLength()
+      if (sl & 3) != 0 then failIllegalLength()
 
       val baa = ByteArrayAccess.instance
       val sl4 = sl - 4
@@ -81,9 +81,9 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
         def fail() =
           throw new IllegalArgumentException(s""""${Util
             .show(chars)}" is not a valid $name encoding. '$c' at index $ix is not part of the $name alphabet.""")
-        if (c > 127) fail()
+        if c > 127 then fail()
         val b = lookup(c.toInt)
-        if (b < 0) fail()
+        if b < 0 then fail()
         b.toLong
 
       def decode4(result: Array[Byte], si: Int, di: Int): Unit =
@@ -98,8 +98,8 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
         (x << 1) + x // sl / 4 * 3
 
       val c1 = c(1)
-      if (c1 == 0x3D) // if we have at least one padding char
-        val oddBytes = if (c(2) == 0x3D) 1 else 2
+      if c1 == 0x3D then // if we have at least one padding char
+        val oddBytes = if c(2) == 0x3D then 1 else 2
         val result   = new Array[Byte](baseLen - 3 + oddBytes)
 
         def decodeRest(si: Int, di: Int): Array[Byte] =
@@ -112,7 +112,7 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
           result
 
         @tailrec def rec(si: Int, di: Int): Array[Byte] =
-          if (si < sl4)
+          if si < sl4 then
             decode4(result, si, di)
             rec(si + 4, di + 3)
           else decodeRest(si, di)
@@ -122,7 +122,7 @@ final class Base64(name: String, alphabet: String) extends LookupBaseEncoding(na
         val result = new Array[Byte](baseLen)
 
         @tailrec def rec(si: Int, di: Int): Array[Byte] =
-          if (si < sl)
+          if si < sl then
             decode4(result, si, di)
             rec(si + 4, di + 3)
           else result

@@ -43,20 +43,20 @@ object Unsafe:
 
   // the offset to the first element in a byte array.
   final private val BYTE_ARRAY_BASE_OFFSET =
-    if (UNSAFE ne null) UNSAFE.arrayBaseOffset(classOf[Array[Byte]]).toLong else 0L
+    if UNSAFE ne null then UNSAFE.arrayBaseOffset(classOf[Array[Byte]]).toLong else 0L
 
   final private val SHORT_ARRAY_BASE_OFFSET =
-    if (UNSAFE ne null) UNSAFE.arrayBaseOffset(classOf[Array[Short]]).toLong else 0L
+    if UNSAFE ne null then UNSAFE.arrayBaseOffset(classOf[Array[Short]]).toLong else 0L
 
   final private val INT_ARRAY_BASE_OFFSET =
-    if (UNSAFE ne null) UNSAFE.arrayBaseOffset(classOf[Array[Int]]).toLong else 0L
+    if UNSAFE ne null then UNSAFE.arrayBaseOffset(classOf[Array[Int]]).toLong else 0L
 
   final private val LONG_ARRAY_BASE_OFFSET =
-    if (UNSAFE ne null) UNSAFE.arrayBaseOffset(classOf[Array[Long]]).toLong else 0L
+    if UNSAFE ne null then UNSAFE.arrayBaseOffset(classOf[Array[Long]]).toLong else 0L
 
   @nowarn("cat=other-match-analysis")
   def byteArrayAccess: ByteArrayAccess =
-    if (UNSAFE ne null)
+    if UNSAFE ne null then
       ByteOrder.nativeOrder() match
         case ByteOrder.LITTLE_ENDIAN => new LittleEndianByteArrayAccess
         case ByteOrder.BIG_ENDIAN    => new BigEndianByteArrayAccess
@@ -83,12 +83,12 @@ object Unsafe:
       UNSAFE.putLong(byteArray, ix.toLong + BYTE_ARRAY_BASE_OFFSET, value)
 
     def shortArrayToByteArray(source: Array[Short], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val copySource =
-          if (this.byteOrder != byteOrder)
+          if this.byteOrder != byteOrder then
             val array = new Array[Short](source.length)
             @tailrec def rec(ix: Int): Array[Short] =
-              if (ix < array.length)
+              if ix < array.length then
                 array(ix) = java.lang.Short.reverseBytes(source(ix))
                 rec(ix + 1)
               else array
@@ -100,12 +100,12 @@ object Unsafe:
       else Array.emptyByteArray
 
     def intArrayToByteArray(source: Array[Int], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val copySource =
-          if (this.byteOrder != byteOrder)
+          if this.byteOrder != byteOrder then
             val array = new Array[Int](source.length)
             @tailrec def rec(ix: Int): Array[Int] =
-              if (ix < array.length)
+              if ix < array.length then
                 array(ix) = java.lang.Integer.reverseBytes(source(ix))
                 rec(ix + 1)
               else array
@@ -117,12 +117,12 @@ object Unsafe:
       else Array.emptyByteArray
 
     def longArrayToByteArray(source: Array[Long], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val copySource =
-          if (this.byteOrder != byteOrder)
+          if this.byteOrder != byteOrder then
             val array = new Array[Long](source.length)
             @tailrec def rec(ix: Int): Array[Long] =
-              if (ix < array.length)
+              if ix < array.length then
                 array(ix) = java.lang.Long.reverseBytes(source(ix))
                 rec(ix + 1)
               else array
@@ -134,18 +134,18 @@ object Unsafe:
       else Array.emptyByteArray
 
     def floatArrayToByteArray(source: Array[Float], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val copySource = new Array[Int](source.length)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Int] =
-            if (ix < copySource.length)
+            if ix < copySource.length then
               copySource(ix) = java.lang.Integer.reverseBytes(java.lang.Float.floatToIntBits(source(ix)))
               rec(ix + 1)
             else copySource
           rec(0)
         else
           @tailrec def rec(ix: Int): Array[Int] =
-            if (ix < copySource.length)
+            if ix < copySource.length then
               copySource(ix) = java.lang.Float.floatToIntBits(source(ix))
               rec(ix + 1)
             else copySource
@@ -156,18 +156,18 @@ object Unsafe:
       else Array.emptyByteArray
 
     def doubleArrayToByteArray(source: Array[Double], byteOrder: ByteOrder): Array[Byte] =
-      if (source.length > 0)
+      if source.length > 0 then
         val copySource = new Array[Long](source.length)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Long] =
-            if (ix < copySource.length)
+            if ix < copySource.length then
               copySource(ix) = java.lang.Long.reverseBytes(java.lang.Double.doubleToLongBits(source(ix)))
               rec(ix + 1)
             else copySource
           rec(0)
         else
           @tailrec def rec(ix: Int): Array[Long] =
-            if (ix < copySource.length)
+            if ix < copySource.length then
               copySource(ix) = java.lang.Double.doubleToLongBits(source(ix))
               rec(ix + 1)
             else copySource
@@ -178,14 +178,14 @@ object Unsafe:
       else Array.emptyByteArray
 
     def byteArrayToShortArray(source: Array[Byte], byteOrder: ByteOrder): Array[Short] =
-      if (source.length > 0)
-        if ((source.length & 1) != 0)
+      if source.length > 0 then
+        if (source.length & 1) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Short](source.length >> 1)
         UNSAFE.copyMemory(source, BYTE_ARRAY_BASE_OFFSET, target, SHORT_ARRAY_BASE_OFFSET, source.length.toLong)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Short] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Short.reverseBytes(target(ix))
               rec(ix + 1)
             else target
@@ -194,14 +194,14 @@ object Unsafe:
       else Array.emptyShortArray
 
     def byteArrayToIntArray(source: Array[Byte], byteOrder: ByteOrder): Array[Int] =
-      if (source.length > 0)
-        if ((source.length & 3) != 0)
+      if source.length > 0 then
+        if (source.length & 3) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Int](source.length >> 2)
         UNSAFE.copyMemory(source, BYTE_ARRAY_BASE_OFFSET, target, INT_ARRAY_BASE_OFFSET, source.length.toLong)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Int] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Integer.reverseBytes(target(ix))
               rec(ix + 1)
             else target
@@ -210,14 +210,14 @@ object Unsafe:
       else Array.emptyIntArray
 
     def byteArrayToLongArray(source: Array[Byte], byteOrder: ByteOrder): Array[Long] =
-      if (source.length > 0)
-        if ((source.length & 7) != 0)
+      if source.length > 0 then
+        if (source.length & 7) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val target = new Array[Long](source.length >> 3)
         UNSAFE.copyMemory(source, BYTE_ARRAY_BASE_OFFSET, target, LONG_ARRAY_BASE_OFFSET, source.length.toLong)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Long] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Long.reverseBytes(target(ix))
               rec(ix + 1)
             else target
@@ -226,22 +226,22 @@ object Unsafe:
       else Array.emptyLongArray
 
     def byteArrayToFloatArray(source: Array[Byte], byteOrder: ByteOrder): Array[Float] =
-      if (source.length > 0)
-        if ((source.length & 3) != 0)
+      if source.length > 0 then
+        if (source.length & 3) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val ints = new Array[Int](source.length >> 2)
         UNSAFE.copyMemory(source, BYTE_ARRAY_BASE_OFFSET, ints, INT_ARRAY_BASE_OFFSET, source.length.toLong)
         val target = new Array[Float](ints.length)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Float] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Float.intBitsToFloat(java.lang.Integer.reverseBytes(ints(ix)))
               rec(ix + 1)
             else target
           rec(0)
         else
           @tailrec def rec(ix: Int): Array[Float] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Float.intBitsToFloat(ints(ix))
               rec(ix + 1)
             else target
@@ -249,22 +249,22 @@ object Unsafe:
       else Array.emptyFloatArray
 
     def byteArrayToDoubleArray(source: Array[Byte], byteOrder: ByteOrder): Array[Double] =
-      if (source.length > 0)
-        if ((source.length & 7) != 0)
+      if source.length > 0 then
+        if (source.length & 7) != 0 then
           throw new IllegalArgumentException(s"source Array[Byte] has illegal length: ${source.length}")
         val longs = new Array[Long](source.length >> 3)
         UNSAFE.copyMemory(source, BYTE_ARRAY_BASE_OFFSET, longs, LONG_ARRAY_BASE_OFFSET, source.length.toLong)
         val target = new Array[Double](longs.length)
-        if (this.byteOrder != byteOrder)
+        if this.byteOrder != byteOrder then
           @tailrec def rec(ix: Int): Array[Double] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Double.longBitsToDouble(java.lang.Long.reverseBytes(longs(ix)))
               rec(ix + 1)
             else target
           rec(0)
         else
           @tailrec def rec(ix: Int): Array[Double] =
-            if (ix < target.length)
+            if ix < target.length then
               target(ix) = java.lang.Double.longBitsToDouble(longs(ix))
               rec(ix + 1)
             else target

@@ -38,14 +38,14 @@ trait ToByteArrayOutput:
 
     def writeByte(byte: Byte): this.type =
       ensureBufferAllocated()
-      if (currentChunkBufferCursor == bufferSize) appendChunk()
+      if currentChunkBufferCursor == bufferSize then appendChunk()
       val cursor = currentChunkBufferCursor
       currentChunkBuffer(cursor) = byte
       currentChunkBufferCursor = cursor + 1
       this
 
     def writeBytes(a: Byte, b: Byte): this.type =
-      if (currentChunkBufferCursor < bufferSize - 1)
+      if currentChunkBufferCursor < bufferSize - 1 then
         ensureBufferAllocated()
         val cursor = currentChunkBufferCursor
         currentChunkBuffer(cursor) = a
@@ -55,7 +55,7 @@ trait ToByteArrayOutput:
       else writeByte(a).writeByte(b)
 
     def writeBytes(a: Byte, b: Byte, c: Byte): this.type =
-      if (currentChunkBufferCursor < bufferSize - 2)
+      if currentChunkBufferCursor < bufferSize - 2 then
         ensureBufferAllocated()
         val cursor = currentChunkBufferCursor
         currentChunkBuffer(cursor) = a
@@ -66,7 +66,7 @@ trait ToByteArrayOutput:
       else writeByte(a).writeByte(b).writeByte(c)
 
     def writeBytes(a: Byte, b: Byte, c: Byte, d: Byte): this.type =
-      if (currentChunkBufferCursor < bufferSize - 3)
+      if currentChunkBufferCursor < bufferSize - 3 then
         ensureBufferAllocated()
         val cursor = currentChunkBufferCursor
         currentChunkBuffer(cursor) = a
@@ -82,12 +82,12 @@ trait ToByteArrayOutput:
         val remaining = bufferSize - currentChunkBufferCursor
         val len       = byteAccess.sizeOf(rest)
         val newRest   = byteAccess.copyToByteArray(rest, currentChunkBuffer, currentChunkBufferCursor)
-        if (len > remaining)
+        if len > remaining then
           appendChunk()
           rec(newRest)
         else
           currentChunkBufferCursor += len.toInt
-          if (currentChunkBufferCursor < 0) throw new Borer.Error.Overflow(this, f"Output size exceed 2^31 bytes")
+          if currentChunkBufferCursor < 0 then throw new Borer.Error.Overflow(this, f"Output size exceed 2^31 bytes")
           this
       ensureBufferAllocated()
       rec(bytes)
@@ -96,27 +96,27 @@ trait ToByteArrayOutput:
       ensureBufferAllocated()
       val longSize = size
       val intSize  = longSize.toInt
-      if (intSize != longSize)
+      if intSize != longSize then
         throw new Borer.Error.Overflow(this, f"Output size of $longSize%,d bytes too large for byte array")
       val array = new Array[Byte](intSize)
 
       @tailrec def rec(chunk: ArrayChunk, cursor: Int): Array[Byte] =
-        if (chunk ne null)
-          val len = if (chunk.next eq null) currentChunkBufferCursor else bufferSize
+        if chunk ne null then
+          val len = if chunk.next eq null then currentChunkBufferCursor else bufferSize
           System.arraycopy(chunk.buffer, 0, array, cursor, len)
           rec(chunk.next, cursor + bufferSize)
         else
-          if (allowBufferCaching) ByteArrayCache.release(currentChunkBuffer)
+          if allowBufferCaching then ByteArrayCache.release(currentChunkBuffer)
           currentChunkBuffer = null
           array
 
       rec(rootChunk, 0)
 
     @inline private def ensureBufferAllocated(): Unit =
-      if (currentChunkBuffer eq null) allocateBuffer()
+      if currentChunkBuffer eq null then allocateBuffer()
 
     private def allocateBuffer(): Unit =
-      currentChunkBuffer = if (allowBufferCaching) ByteArrayCache.acquire(bufferSize) else new Array[Byte](bufferSize)
+      currentChunkBuffer = if allowBufferCaching then ByteArrayCache.acquire(bufferSize) else new Array[Byte](bufferSize)
       currentChunkBufferCursor = 0
       rootChunk = new ArrayChunk(currentChunkBuffer, next = null)
       currentChunk = rootChunk

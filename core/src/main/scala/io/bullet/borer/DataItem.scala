@@ -75,7 +75,7 @@ object DataItem:
   //////////////////////////////////////////////////////////////////////////
 
   def stringify(mask: Int): String =
-    if (mask != AllButBreak)
+    if mask != AllButBreak then
       Iterator
         .range(0, 25)
         .map { i =>

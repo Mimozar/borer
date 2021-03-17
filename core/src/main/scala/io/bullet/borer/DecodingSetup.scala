@@ -149,7 +149,7 @@ object DecodingSetup:
         case x: Json.DecodingConfig => io.bullet.borer.json.DirectParser(inputValue, x)
         case _                      => null
       val parser =
-        if (directParser ne null) null
+        if directParser ne null then null
         else
           parserCreator(p(inputValue).asInstanceOf[Input[Bytes]], p.byteAccess.asInstanceOf[ByteAccess[Bytes]], config)
       new InputReader(parser, directParser, receiverWrapper, config, target)
@@ -157,6 +157,6 @@ object DecodingSetup:
     private def decodeFrom(reader: Reader): AnyRef =
       try
         val value = decoder.read(reader)
-        if (!prefixOnly) reader.readEndOfInput()
+        if !prefixOnly then reader.readEndOfInput()
         value
       finally reader.release()

@@ -73,7 +73,7 @@ object Receiver:
     def onBytesStart(): Unit = default("`BytesStart`")
 
     def onString(value: String): Unit =
-      default(s"the String `${if (value.length > 20) value.take(20) + "..." else value}`")
+      default(s"the String `${if value.length > 20 then value.take(20) + "..." else value}`")
     def onChars(buffer: Array[Char], length: Int): Unit = default(s"Chars with length $length")
 
     def onText[Bytes: ByteAccess](value: Bytes): Unit =
