@@ -32,8 +32,8 @@ trait TestUtils:
   def deriveEnc[T <: Product](using m: Mirror.ProductOf[T])(using te: Encoder[m.MirroredElemTypes]): Encoder[T] =
     Encoder {
       (w, x) =>
-        val tuple = 
+        val tuple =
           if (x.productArity == 0) EmptyTuple // required until https://github.com/lampepfl/dotty/pull/11793 is fixed
-          else Tuple.fromProduct(x) 
+          else Tuple.fromProduct(x)
         te.write(w, tuple.asInstanceOf[m.MirroredElemTypes])
     }
