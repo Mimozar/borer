@@ -199,12 +199,15 @@ lazy val `compat-akka` = (projectMatrix in file("compat-akka"))
   .settings(
     moduleName := "borer-compat-akka",
     libraryDependencies ++= Seq(
+      // (`akka-actor`.value % "provided").cross(CrossVersion.for3Use2_13),
+      // (`akka-stream`.value % "provided").cross(CrossVersion.for3Use2_13),
+      // (`akka-http`.value % "provided").cross(CrossVersion.for3Use2_13),
       `akka-actor`.value % "provided",
       `akka-stream`.value % "provided",
       `akka-http`.value % "provided",
       utest.value)
   )
-  .jvmPlatform(scalaVersions = scala2Only)
+  .jvmPlatform(scalaVersions = scala2Only) // allScalaVersions)
 
 lazy val `compat-cats` = (projectMatrix in file("compat-cats"))
   .enablePlugins(AutomateHeaderPlugin)
@@ -271,8 +274,8 @@ lazy val derivation = (projectMatrix in file("derivation"))
       else Seq(`scala-compiler`.value, `scala-reflect`.value, utest.value)
     }
   )
-  .jvmPlatform(scala2Only)
-  .jsPlatform(scala2Only, scalajsSettings)
+  .jvmPlatform(allScalaVersions)
+  .jsPlatform(allScalaVersions, scalajsSettings)
 
 lazy val deriver = (projectMatrix in file("deriver"))
   .enablePlugins(AutomateHeaderPlugin)
@@ -285,8 +288,8 @@ lazy val deriver = (projectMatrix in file("deriver"))
       else Seq(`scala-compiler`.value, `scala-reflect`.value, utest.value)
     }
   )
-  .jvmPlatform(scala2Only)
-  .jsPlatform(scala2Only, scalajsSettings)
+  .jvmPlatform(allScalaVersions)
+  .jsPlatform(allScalaVersions, scalajsSettings)
 
 def s213(matrix: sbt.internal.ProjectMatrix): Project = matrix.finder(VirtualAxis.jvm)(scala213)
 
