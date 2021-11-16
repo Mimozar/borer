@@ -331,7 +331,8 @@ object Logging:
             case 2 => ElementType.UnboundedByteStringElement
             case 3 => ElementType.UnboundedTextStringElement
             case _ => throw new IllegalStateException
-      else ElementType.ArrayElement
+          }
+      } else ElementType.ArrayElement
 
     def onNull(): Unit =
       logger.onNull()
