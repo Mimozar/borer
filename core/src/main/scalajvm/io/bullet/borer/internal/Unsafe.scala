@@ -18,6 +18,7 @@ import scala.util.control.NonFatal
 
 object Unsafe {
 
+  @nowarn
   final val UNSAFE: SMUnsafe = {
     try {
       SMUnsafe.getUnsafe
