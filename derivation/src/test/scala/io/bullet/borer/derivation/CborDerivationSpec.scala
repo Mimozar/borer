@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +8,10 @@
 
 package io.bullet.borer.derivation
 
-import io.bullet.borer._
+import io.bullet.borer.*
 
-object CborDerivationSpec extends DerivationSpec(Cbor) {
-  import Dom._
+class CborDerivationSpec extends DerivationSpec(Cbor) {
+  import Dom.*
 
   def encode[T: Encoder](value: T): String =
     toHexString(Cbor.encode(value).withConfig(Cbor.EncodingConfig(bufferSize = 19)).toByteArray)
@@ -37,8 +37,8 @@ object CborDerivationSpec extends DerivationSpec(Cbor) {
       ))
 
   def arrayBasedMissingElemErrorMsg =
-    "Expected Array Start or Array Header (10) for decoding an instance of type " +
-      "`DerivationSpec.this.Foo` but got Array Header (9) (input position 0)"
+    "Expected Array-Start or Array-Header(10) for decoding an instance of " +
+      "`Foo` but got Array-Header(9) (input position 0)"
 
   def mapBasedFooDom =
     MapElem.Sized(

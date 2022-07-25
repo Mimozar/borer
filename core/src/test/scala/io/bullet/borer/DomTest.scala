@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,37 +8,31 @@
 
 package io.bullet.borer
 
-import utest._
-
 import scala.collection.immutable.HashMap
 
-object DomTest extends TestSuite {
+class DomTest extends BorerSuite:
 
-  val tests = Tests {
-
-    "Dom.MapElem.toMap" - {
-      Dom.MapElem
-        .Sized(
-          "age"  -> Dom.IntElem(2),
-          "name" -> Dom.StringElem("Lolle")
-        )
-        .to[HashMap] ==> Map(
-        Dom.StringElem("age")  -> Dom.IntElem(2),
-        Dom.StringElem("name") -> Dom.StringElem("Lolle")
+  test("Dom.MapElem.toMap") {
+    Dom.MapElem
+      .Sized(
+        "age"  -> Dom.IntElem(2),
+        "name" -> Dom.StringElem("Lolle")
       )
-    }
-
-    "Dom.MapElem.toStringKeyedMap" - {
-      Dom.MapElem
-        .Sized(
-          "age"  -> Dom.IntElem(2),
-          "name" -> Dom.StringElem("Lolle")
-        )
-        .toStringKeyed[HashMap] ==> Right(
-        Map(
-          "age"  -> Dom.IntElem(2),
-          "name" -> Dom.StringElem("Lolle")
-        ))
-    }
+      .to[HashMap] ==> Map(
+      Dom.StringElem("age")  -> Dom.IntElem(2),
+      Dom.StringElem("name") -> Dom.StringElem("Lolle")
+    )
   }
-}
+
+  test("Dom.MapElem.toStringKeyedMap") {
+    Dom.MapElem
+      .Sized(
+        "age"  -> Dom.IntElem(2),
+        "name" -> Dom.StringElem("Lolle")
+      )
+      .toStringKeyed[HashMap] ==> Right(
+      Map(
+        "age"  -> Dom.IntElem(2),
+        "name" -> Dom.StringElem("Lolle")
+      ))
+  }

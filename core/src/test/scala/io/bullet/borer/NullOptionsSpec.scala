@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,23 +8,15 @@
 
 package io.bullet.borer
 
-import io.bullet.borer.internal.unapplyOption
-import utest._
-
-object NullOptionsSpec extends ByteArrayJsonSpec {
+class NullOptionsSpec extends ByteArrayJsonSpec:
 
   case class Foo(int: Int, string: Option[String])
 
-  implicit val fooCodec: Codec[Foo] = {
+  implicit val fooCodec: Codec[Foo] =
     import NullOptions._
-    Codec(Encoder.from(unapplyOption(Foo.unapply(_))), Decoder.from(Foo.apply(_, _)))
-  }
+    Codec.forProduct[Foo]
 
-  val tests = Tests {
-
-    "NullOptions" - {
-      roundTrip("""[12,null]""", Foo(12, None))
-      roundTrip("""[12,"foo"]""", Foo(12, Some("foo")))
-    }
+  test("NullOptions") {
+    roundTrip("""[12,null]""", Foo(12, None))
+    roundTrip("""[12,"foo"]""", Foo(12, Some("foo")))
   }
-}

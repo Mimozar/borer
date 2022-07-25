@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
 
 import io.bullet.borer.{Decoder, Dom, Encoder, Json}
 
-object JsonDerivationSpec extends DerivationSpec(Json) {
+class JsonDerivationSpec extends DerivationSpec(Json) {
   import Dom._
 
   def encode[T: Encoder](value: T): String =

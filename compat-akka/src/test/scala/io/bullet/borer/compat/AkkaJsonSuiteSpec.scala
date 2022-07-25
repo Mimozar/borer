@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets
 import _root_.akka.util.ByteString
 import io.bullet.borer._
 
-object AkkaJsonSuiteSpec extends AbstractJsonSuiteSpec {
+class AkkaJsonSuiteSpec extends AbstractJsonSuiteSpec {
   import akka._
 
   def encode[T: Encoder](value: T): String =

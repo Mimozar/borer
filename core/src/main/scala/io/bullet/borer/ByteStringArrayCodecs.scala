@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@ package io.bullet.borer
 import java.nio.ByteOrder
 import io.bullet.borer.internal.ByteArrayAccess
 
-final class ByteStringArrayCodecs private (byteOrder: ByteOrder) {
+final class ByteStringArrayCodecs private (byteOrder: ByteOrder):
 
   implicit def shortArrayAsByteArrayEncoder(implicit enc: Encoder[Array[Byte]]): Encoder[Array[Short]] =
     Encoder((w, x) => enc.write(w, ByteArrayAccess.instance.shortArrayToByteArray(x, byteOrder)))
@@ -42,10 +42,8 @@ final class ByteStringArrayCodecs private (byteOrder: ByteOrder) {
 
   implicit def doubleArrayAsByteArrayDecoder(implicit dec: Decoder[Array[Byte]]): Decoder[Array[Double]] =
     Decoder(r => ByteArrayAccess.instance.byteArrayToDoubleArray(dec.read(r), byteOrder))
-}
 
-object ByteStringArrayCodecs {
+object ByteStringArrayCodecs:
 
   final val BigEndian    = new ByteStringArrayCodecs(ByteOrder.BIG_ENDIAN)
   final val LittleEndian = new ByteStringArrayCodecs(ByteOrder.LITTLE_ENDIAN)
-}

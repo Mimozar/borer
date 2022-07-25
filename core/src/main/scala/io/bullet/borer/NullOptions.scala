@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 Mathias Doenitz
+ * Copyright (c) 2019-2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +18,7 @@ package io.bullet.borer
  * import io.bullet.borer.NullOptions._
  * }}}
  */
-object NullOptions {
+object NullOptions:
 
   implicit def encoder[T: Encoder]: Encoder[Option[T]] =
     Encoder {
@@ -31,5 +31,4 @@ object NullOptions {
       if (r.tryReadNull()) None
       else Some(r.read[T]())
     }
-}
 //#docs-quote-delimiter
