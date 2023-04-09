@@ -1,7 +1,7 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import sbt._
 
-def scala3 = "3.2.1"
+def scala3 = "3.2.2"
 
 inThisBuild(
   List(
@@ -21,8 +21,8 @@ inThisBuild(
   )
 )
 
-addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
-addCommandAlias("check", "; scalafmtSbtCheck; scalafmtCheckAll")
+addCommandAlias("fmt", "all scalafmt test:scalafmt")
+addCommandAlias("check", "; scalafmtCheckAll")
 
 addCommandAlias(
   "testJVM",
@@ -59,7 +59,7 @@ lazy val commonSettings = Seq(
   Compile / doc / scalacOptions += "-no-link-warnings",
   sourcesInBase := false,
   Compile / unmanagedResources += baseDirectory.value.getParentFile.getParentFile / "LICENSE",
-  //scalafmtOnCompile := true, // reformat main and test sources on compile
+  scalafmtOnCompile := true, // reformat main and test sources on compile
 
   // file headers
   headerLicense := Some(HeaderLicense.MPLv2("2019-2022", "Mathias Doenitz")),
@@ -109,7 +109,7 @@ val `cats-core`         = Def.setting("org.typelevel"           %%% "cats-core" 
 val `circe-core`        = Def.setting("io.circe"                %%% "circe-core"              % "0.14.3")
 val `circe-parser`      = Def.setting("io.circe"                %%% "circe-parser"            % "0.14.3")
 val `circe-generic`     = Def.setting("io.circe"                %%% "circe-generic"           % "0.14.3")
-val `scodec-bits`       = Def.setting("org.scodec"              %%% "scodec-bits"             % "1.1.34")
+val `scodec-bits`       = Def.setting("org.scodec"              %%% "scodec-bits"             % "1.1.35")
 val munit               = Def.setting("org.scalameta"           %%% "munit"                   % "0.7.29" % Test)
 val macrolizer          = Def.setting("io.bullet"               %%% "macrolizer"              % "0.6.2" % "compile-internal, test-internal")
 // format: ON
@@ -307,7 +307,7 @@ lazy val site = project
       java.awt.Desktop.getDesktop.browse(new java.net.URI(uri))
       state
     },
-    Compile / paradox / version := "1.10.1",
+    Compile / paradox / version := "1.10.2",
     paradoxProperties ++= Map(
       "image.base_url" -> ".../assets/images",
       "github.base_url" -> {
